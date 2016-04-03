@@ -1,0 +1,17 @@
+3685eea2c4131019b69101dc8b124a50 *DESCRIPTION
+8a34db86843c747a2e4e6160fb053b6f *NAMESPACE
+c6917bdb32d5626ee2d2c46b92b9229f *R/RcppExports.R
+831c212feab4d9683fecb17a03aae8ac *R/roll.R
+324174853d19af537f7eff2d0e05bcce *man/roll_cor.Rd
+d73da14762c71af242d523effbd3fe6e *man/roll_cov.Rd
+09e901d39ed54ce7f1ff119cd894a6ca *man/roll_eigen.Rd
+da4fd16fd801af96d544c31acead1ad6 *man/roll_lm.Rd
+61936853057121d1b4ed1481ed8c03cb *man/roll_mean.Rd
+c447b0bfe56078d1ebce554f764127f4 *man/roll_pcr.Rd
+18f307cbd0d638f680a6ceaa58a653b9 *man/roll_sd.Rd
+0cbc866bf7681fd91fcc71693dd07a83 *man/roll_var.Rd
+dd0867ca7ff51ade9f1bab8f09e77c65 *man/roll_vif.Rd
+2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars
+8d46d69896a1f1d31ed76035a0e49d67 *src/Makevars.win
+8c4dd501762e8419d9039bcd2783eee6 *src/RcppExports.cpp
+bc186b85e566a3b207205ac89a6d6411 *src/roll.cpp
