@@ -1,8 +1,6 @@
 // Google C++ Style Guide: https://google.github.io/styleguide/cppguide.html
 
-// #ifndef ARMA_DONT_PRINT_ERRORS
 #define ARMA_DONT_PRINT_ERRORS
-// #endif
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::depends(RcppParallel)]]
@@ -146,23 +144,6 @@ void check_comps(const arma::uvec& comps, const unsigned int& n_cols) {
   
 }
 
-// this is the same as check_comps except uses < instead of <=
-void check_comps_vif(const arma::uvec& comps, const unsigned int& n_cols) {
-  
-  if (comps.max() > n_cols) {
-    stop("maximum value of 'comps' must be less than number of columns in 'x'");
-  }
-  
-  if (comps.min() < 1) {
-    stop("minimum value of 'comps' must be greater than or equal to one");
-  }
-  
-  if (comps.size() > n_cols) {
-    stop("length of 'comps' must be less than number of columns in 'x'");
-  }
-  
-}
-
 void check_weights(const arma::vec& weights, const unsigned int& width) {
   
   if (weights.size() != width) {
@@ -249,11 +230,11 @@ struct RollMeanRows : public Worker {
           if (n_obs >= min_obs) {
             arma_center(i, j) = sum_data / sum_weights;
           } else {
-            arma_center(i, j) = NAN;
+            arma_center(i, j) = NA_REAL;
           }
           
         } else {
-          arma_center(i, j) = NAN;
+          arma_center(i, j) = NA_REAL;
         }
         
       }
@@ -323,11 +304,11 @@ struct RollMeanCols : public Worker {
           if (n_obs >= min_obs) {
             arma_center(i, j) = sum_data / sum_weights;
           } else {
-            arma_center(i, j) = NAN;
+            arma_center(i, j) = NA_REAL;
           }
           
         } else {
-          arma_center(i, j) = NAN;
+          arma_center(i, j) = NA_REAL;
         }
         
       }
@@ -468,11 +449,11 @@ struct RollVarRows : public Worker {
             arma_scale(i, j) = ((sum_data / sum_weights) /
                                   (1 - (sum_weights_sq / pow(sum_weights, 2.0))));
           } else {
-            arma_scale(i, j) = NAN;
+            arma_scale(i, j) = NA_REAL;
           }
           
         } else {
-          arma_scale(i, j) = NAN;
+          arma_scale(i, j) = NA_REAL;
         }
         
       }
@@ -558,11 +539,11 @@ struct RollVarCols : public Worker {
             arma_scale(i, j) = ((sum_data / sum_weights) /
                                   (1 - (sum_weights_sq / pow(sum_weights, 2.0))));
           } else {
-            arma_scale(i, j) = NAN;
+            arma_scale(i, j) = NA_REAL;
           }
           
         } else {
-          arma_scale(i, j) = NAN;
+          arma_scale(i, j) = NA_REAL;
         }
         
       }
@@ -648,7 +629,7 @@ NumericMatrix roll_var(const NumericMatrix& data, const int& width,
   
 }
 
-// 'Worker' function for computing rolling variances
+// 'Worker' function for computing rolling standard deviations
 struct RollSdRows : public Worker {
   
   const RMatrix<double> data;   // source
@@ -724,11 +705,11 @@ struct RollSdRows : public Worker {
             arma_scale(i, j) = sqrt((sum_data / sum_weights) /
                                       (1 - (sum_weights_sq / pow(sum_weights, 2.0))));
           } else {
-            arma_scale(i, j) = NAN;
+            arma_scale(i, j) = NA_REAL;
           }
           
         } else {
-          arma_scale(i, j) = NAN;
+          arma_scale(i, j) = NA_REAL;
         }
         
       }
@@ -737,7 +718,7 @@ struct RollSdRows : public Worker {
   
 };
 
-// 'Worker' function for computing rolling variances
+// 'Worker' function for computing rolling standard deviations
 struct RollSdCols : public Worker {
   
   const RMatrix<double> data;   // source
@@ -814,11 +795,11 @@ struct RollSdCols : public Worker {
             arma_scale(i, j) = sqrt((sum_data / sum_weights) /
                                       (1 - (sum_weights_sq / pow(sum_weights, 2.0))));
           } else {
-            arma_scale(i, j) = NAN;
+            arma_scale(i, j) = NA_REAL;
           }
           
         } else {
-          arma_scale(i, j) = NAN;
+          arma_scale(i, j) = NA_REAL;
         }
         
       }
@@ -904,6 +885,295 @@ NumericMatrix roll_sd(const NumericMatrix& data, const int& width,
   
 }
 
+// 'Worker' function for computing rolling scaling and centering
+struct RollScaleCenterRows : public Worker {
+  
+  const RMatrix<double> data;   // source
+  const int n_rows;
+  const int n_cols;
+  const int width;
+  const arma::vec arma_weights;
+  const bool center;
+  const arma::mat arma_center;
+  const bool scale;
+  arma::mat& arma_scale;
+  const int min_obs;
+  const arma::uvec arma_any_na;
+  const bool na_restore;
+  arma::mat& arma_cov;          // destination (pass by reference)
+  
+  // initialize with source and destination
+  RollScaleCenterRows(const NumericMatrix data, const int n_rows,
+                      const int n_cols, const int width,
+                      const arma::vec arma_weights, const bool center,
+                      const arma::mat arma_center, const bool scale,
+                      arma::mat& arma_scale, const int min_obs,
+                      const arma::uvec arma_any_na, const bool na_restore,
+                      arma::mat& arma_cov)
+    : data(data), n_rows(n_rows),
+      n_cols(n_cols), width(width),
+      arma_weights(arma_weights), center(center),
+      arma_center(arma_center), scale(scale),
+      arma_scale(arma_scale), min_obs(min_obs),
+      arma_any_na(arma_any_na), na_restore(na_restore),
+      arma_cov(arma_cov) { }
+  
+  // function call operator that iterates by row
+  void operator()(std::size_t begin_row, std::size_t end_row) {
+    for (std::size_t i = begin_row; i < end_row; i++) {
+      for (int j = 0; j < n_cols; j++) {
+        
+        int count = 0;
+        int n_obs = 0;
+        bool any_data = false;
+        double sum_data = 0;
+        
+        // don't compute if missing value and 'na_restore' argument is true
+        if ((!na_restore) || (na_restore && !std::isnan(data(i, j)))) {
+          
+          // number of observations is either the window size or,
+          // for partial results, the number of the current row
+          while ((width > count) && (i >= (unsigned)count)) {
+            
+            // don't include if missing value and 'any_na' argument is 1
+            // note: 'any_na' is set to 0 if 'complete_obs' argument is false
+            if ((arma_any_na[i - count] == 0) && !std::isnan(data(i - count, j))) {
+              
+              // keep first non-missing value
+              if (!any_data) {
+                sum_data = data(i - count, j);
+              }
+              
+              any_data = true;
+              n_obs += 1;
+              
+            }
+            
+            count += 1;
+            
+          }
+          
+          // compute the scaling and centering
+          if (n_obs >= min_obs) {
+            
+            // compute with 'center' and 'scale' arguments
+            if (center && scale) {
+              arma_cov(i, j) = (sum_data - arma_center(i, j)) / sqrt(arma_scale(i, j));
+            } else if (!center && scale) {
+              arma_cov(i, j) = (sum_data) / sqrt(arma_scale(i, j));
+            } else if (center && !scale) {
+              arma_cov(i, j) = (sum_data - arma_center(i, j));
+            } else if (!center && !scale) {
+              arma_cov(i, j) = (sum_data);
+            }
+            
+          } else {
+            arma_cov(i, j) = NA_REAL;
+          }
+          
+        } else {
+          arma_cov(i, j) = NA_REAL;
+        }
+        
+      }
+    }
+  }
+  
+};
+
+// 'Worker' function for computing rolling scaling and centering
+struct RollScaleCenterCols : public Worker {
+  
+  const RMatrix<double> data;   // source
+  const int n_rows;
+  const int n_cols;
+  const int width;
+  const arma::vec arma_weights;
+  const bool center;
+  const arma::mat arma_center;
+  const bool scale;
+  arma::mat& arma_scale;
+  const int min_obs;
+  const arma::uvec arma_any_na;
+  const bool na_restore;
+  arma::mat& arma_cov;          // destination (pass by reference)
+  
+  // initialize with source and destination
+  RollScaleCenterCols(const NumericMatrix data, const int n_rows,
+                      const int n_cols, const int width,
+                      const arma::vec arma_weights, const bool center,
+                      const arma::mat arma_center, const bool scale,
+                      arma::mat& arma_scale, const int min_obs,
+                      const arma::uvec arma_any_na, const bool na_restore,
+                      arma::mat& arma_cov)
+    : data(data), n_rows(n_rows),
+      n_cols(n_cols), width(width),
+      arma_weights(arma_weights), center(center),
+      arma_center(arma_center), scale(scale),
+      arma_scale(arma_scale), min_obs(min_obs),
+      arma_any_na(arma_any_na), na_restore(na_restore),
+      arma_cov(arma_cov) { }
+  
+  // function call operator that iterates by row
+  void operator()(std::size_t begin_col, std::size_t end_col) {
+    for (std::size_t j = begin_col; j < end_col; j++) {
+      for (int i = 0; i < n_rows; i++) {
+        
+        int count = 0;
+        int n_obs = 0;
+        bool any_data = false;
+        double sum_data = 0;
+        
+        // don't compute if missing value and 'na_restore' argument is true
+        if ((!na_restore) || (na_restore && !std::isnan(data(i, j)))) {
+          
+          // number of observations is either the window size or,
+          // for partial results, the number of the current row
+          while ((width > count) && (i >= count)) {
+            
+            // don't include if missing value and 'any_na' argument is 1
+            // note: 'any_na' is set to 0 if 'complete_obs' argument is false
+            if ((arma_any_na[i - count] == 0) && !std::isnan(data(i - count, j))) {
+              
+              // keep first non-missing value
+              if (!any_data) {
+                sum_data = data(i - count, j);
+              }
+              
+              any_data = true;
+              n_obs += 1;
+              
+            }
+            
+            count += 1;
+            
+          }
+          
+          // compute the scaling and centering
+          if (n_obs >= min_obs) {
+            
+            // compute with 'center' and 'scale' arguments
+            if (center && scale) {
+              arma_cov(i, j) = (sum_data - arma_center(i, j)) / sqrt(arma_scale(i, j));
+            } else if (!center && scale) {
+              arma_cov(i, j) = (sum_data) / sqrt(arma_scale(i, j));
+            } else if (center && !scale) {
+              arma_cov(i, j) = (sum_data - arma_center(i, j));
+            } else if (!center && !scale) {
+              arma_cov(i, j) = (sum_data);
+            }
+            
+          } else {
+            arma_cov(i, j) = NA_REAL;
+          }
+          
+        } else {
+          arma_cov(i, j) = NA_REAL;
+        }
+        
+      }
+    }
+  }
+  
+};
+
+// [[Rcpp::export]]
+NumericMatrix roll_scale(const NumericMatrix& data, const int& width,
+                         const arma::vec& weights, const bool& center,
+                         const bool& scale, const int& min_obs,
+                         const bool& complete_obs, const bool& na_restore,
+                         const std::string& parallel_for) {
+  
+  int n_rows = data.nrow();
+  int n_cols = data.ncol();
+  arma::uvec arma_any_na(n_rows);
+  arma::mat arma_center(n_rows, n_cols);
+  arma::mat arma_scale(n_rows, n_cols);
+  arma::mat arma_cov(n_rows, n_cols);
+  
+  // check 'width' argument for errors
+  check_width(width, n_rows);
+  
+  // default 'weights' argument is equal-weighted,
+  // otherwise check argument for errors
+  check_weights(weights, width);
+  
+  // default 'min_obs' argument is 'width' (equivalent to 'na.rm = FALSE'),
+  // otherwise check argument for errors
+  check_min_obs(min_obs, width);
+  
+  // default 'complete_obs' argument is 'false' (equivalent to 'pairwise'),
+  // otherwise check argument for errors
+  if (complete_obs) {
+    arma_any_na = any_na(data);
+  } else {
+    arma_any_na.fill(0);
+  }
+  
+  // default 'center' argument subtracts mean of each variable,
+  // otherwise zero is used
+  if (center) {
+    if (parallel_for == "rows") {
+      RollMeanRows roll_mean_rows(data, n_rows, n_cols, width, weights,
+                                  min_obs, arma_any_na, na_restore,
+                                  arma_center);
+      parallelFor(0, n_rows, roll_mean_rows);
+    } else if (parallel_for == "cols") {
+      RollMeanCols roll_mean_cols(data, n_rows, n_cols, width, weights,
+                                  min_obs, arma_any_na, na_restore,
+                                  arma_center);
+      parallelFor(0, n_cols, roll_mean_cols);
+    }
+  }
+  
+  // default 'scale' argument divides by the standard deviation of each variable
+  // otherwise no scaling is done
+  if (scale) {
+    if (parallel_for == "rows") {
+      RollVarRows roll_var_rows(data, n_rows, n_cols, width, weights,
+                                center, arma_center,
+                                min_obs, arma_any_na, na_restore,
+                                arma_scale);
+      parallelFor(0, n_rows, roll_var_rows); 
+    } else if (parallel_for == "cols") {
+      RollVarCols roll_var_cols(data, n_rows, n_cols, width, weights,
+                                center, arma_center,
+                                min_obs, arma_any_na, na_restore,
+                                arma_scale);
+      parallelFor(0, n_cols, roll_var_cols);   
+    }
+  }
+  
+  // compute rolling scaling and centering
+  if (parallel_for == "rows") {
+    RollScaleCenterRows roll_scale_center_rows(data, n_rows, n_cols, width, weights,
+                                               center, arma_center, scale, arma_scale,
+                                               min_obs, arma_any_na, na_restore,
+                                               arma_cov);
+    parallelFor(0, n_rows, roll_scale_center_rows); 
+  } else if (parallel_for == "cols") {
+    RollScaleCenterCols roll_scale_center_cols(data, n_rows, n_cols, width, weights,
+                                               center, arma_center, scale, arma_scale,
+                                               min_obs, arma_any_na, na_restore,
+                                               arma_cov);
+    parallelFor(0, n_cols, roll_scale_center_cols); 
+  }
+  
+  // create and return a matrix or xts object
+  NumericMatrix result(wrap(arma_cov));
+  List dimnames = data.attr("dimnames");
+  result.attr("dimnames") = dimnames;
+  result.attr("index") = data.attr("index");
+  result.attr(".indexCLASS") = data.attr(".indexCLASS");
+  result.attr(".indexTZ") = data.attr(".indexTZ");
+  result.attr("tclass") = data.attr("tclass");
+  result.attr("tzone") = data.attr("tzone");
+  result.attr("class") = data.attr("class");
+  
+  return result;
+  
+}
+
 // 'Worker' function for computing rolling means
 struct RollMeanRowsCube : public Worker {
   
@@ -973,13 +1243,13 @@ struct RollMeanRowsCube : public Worker {
               arma_center_j(k, j, i) = sum_j / sum_weights;
               arma_center_k(k, j, i) = sum_k / sum_weights;
             } else {
-              arma_center_j(k, j, i) = NAN;
-              arma_center_k(k, j, i) = NAN;
+              arma_center_j(k, j, i) = NA_REAL;
+              arma_center_k(k, j, i) = NA_REAL;
             }
             
           } else {
-            arma_center_j(k, j, i) = NAN;
-            arma_center_k(k, j, i) = NAN;
+            arma_center_j(k, j, i) = NA_REAL;
+            arma_center_k(k, j, i) = NA_REAL;
           }
           
           // covariance matrix is symmetric
@@ -1063,13 +1333,13 @@ struct RollMeanColsCube : public Worker {
               arma_center_j(k, j, i) = sum_j / sum_weights;
               arma_center_k(k, j, i) = sum_k / sum_weights;
             } else {
-              arma_center_j(k, j, i) = NAN;
-              arma_center_k(k, j, i) = NAN;
+              arma_center_j(k, j, i) = NA_REAL;
+              arma_center_k(k, j, i) = NA_REAL;
             }
             
           } else {
-            arma_center_j(k, j, i) = NAN;
-            arma_center_k(k, j, i) = NAN;
+            arma_center_j(k, j, i) = NA_REAL;
+            arma_center_k(k, j, i) = NA_REAL;
           }
           
           // covariance matrix is symmetric
@@ -1199,13 +1469,13 @@ struct RollVarRowsCube : public Worker {
               arma_scale_k(k, j, i) = ((sum_k / sum_weights) /
                                          (1 - (sum_weights_sq / pow(sum_weights, 2.0))));
             } else {
-              arma_scale_j(k, j, i) = NAN;
-              arma_scale_k(k, j, i) = NAN;
+              arma_scale_j(k, j, i) = NA_REAL;
+              arma_scale_k(k, j, i) = NA_REAL;
             }
             
           } else {
-            arma_scale_j(k, j, i) = NAN;
-            arma_scale_k(k, j, i) = NAN;
+            arma_scale_j(k, j, i) = NA_REAL;
+            arma_scale_k(k, j, i) = NA_REAL;
           }
           
           // covariance matrix is symmetric
@@ -1335,13 +1605,13 @@ struct RollVarColsCube : public Worker {
               arma_scale_k(k, j, i) = ((sum_k / sum_weights) /
                                          (1 - (sum_weights_sq / pow(sum_weights, 2.0))));
             } else {
-              arma_scale_j(k, j, i) = NAN;
-              arma_scale_k(k, j, i) = NAN;
+              arma_scale_j(k, j, i) = NA_REAL;
+              arma_scale_k(k, j, i) = NA_REAL;
             }
             
           } else {
-            arma_scale_j(k, j, i) = NAN;
-            arma_scale_k(k, j, i) = NAN;
+            arma_scale_j(k, j, i) = NA_REAL;
+            arma_scale_k(k, j, i) = NA_REAL;
           }
           
           // covariance matrix is symmetric
@@ -1375,7 +1645,7 @@ struct RollCovRows : public Worker {
   const int min_obs;
   const arma::uvec arma_any_na;
   const bool na_restore;
-  arma::cube& arma_cov;             // destination (pass by reference)
+  arma::cube& arma_cov;           // destination (pass by reference)
   
   // initialize with source and destination
   RollCovRows(const NumericMatrix data, const int n_rows,
@@ -1527,11 +1797,11 @@ struct RollCovRows : public Worker {
               arma_cov(k, j, i) = ((sum_data / sum_weights) /
                                      (1 - (sum_weights_sq / pow(sum_weights, 2.0))));
             } else {
-              arma_cov(k, j, i) = NAN;
+              arma_cov(k, j, i) = NA_REAL;
             }
             
           } else {
-            arma_cov(k, j, i) = NAN;
+            arma_cov(k, j, i) = NA_REAL;
           }
           
           // covariance matrix is symmetric
@@ -1564,7 +1834,7 @@ struct RollCovCols : public Worker {
   const int min_obs;
   const arma::uvec arma_any_na;
   const bool na_restore;
-  arma::cube& arma_cov;             // destination (pass by reference)
+  arma::cube& arma_cov;           // destination (pass by reference)
   
   // initialize with source and destination
   RollCovCols(const NumericMatrix data, const int n_rows,
@@ -1716,11 +1986,11 @@ struct RollCovCols : public Worker {
               arma_cov(k, j, i) = ((sum_data / sum_weights) / 
                                      (1 - (sum_weights_sq / pow(sum_weights, 2.0))));
             } else {
-              arma_cov(k, j, i) = NAN;
+              arma_cov(k, j, i) = NA_REAL;
             }
             
           } else {
-            arma_cov(k, j, i) = NAN;
+            arma_cov(k, j, i) = NA_REAL;
           }
           
           // covariance matrix is symmetric
@@ -1909,11 +2179,11 @@ struct RollMeanScaleRows : public Worker {
           if (n_obs >= min_obs) {
             arma_center(i, j) = sum_data / sum_weights;
           } else {
-            arma_center(i, j) = NAN;
+            arma_center(i, j) = NA_REAL;
           }
           
         } else {
-          arma_center(i, j) = NAN;
+          arma_center(i, j) = NA_REAL;
         }
         
       }
@@ -1988,11 +2258,11 @@ struct RollMeanScaleCols : public Worker {
           if (n_obs >= min_obs) {
             arma_center(i, j) = sum_data / sum_weights;
           } else {
-            arma_center(i, j) = NAN;
+            arma_center(i, j) = NA_REAL;
           }
           
         } else {
-          arma_center(i, j) = NAN;
+          arma_center(i, j) = NA_REAL;
         }
         
       }
@@ -2108,20 +2378,20 @@ struct RollLmSlices : public Worker {
         } else if (!status) {
           
           arma::vec no_solution(n_cols);
-          no_solution.fill(NAN);
+          no_solution.fill(NA_REAL);
           
           arma_coef.row(i) = trans(no_solution);
-          arma_rsq(i, 0) = NAN;
+          arma_rsq(i, 0) = NA_REAL;
           
         }
         
       } else {
         
         arma::vec no_solution(n_cols);
-        no_solution.fill(NAN);
+        no_solution.fill(NA_REAL);
         
         arma_coef.row(i) = trans(no_solution);
-        arma_rsq(i, 0) = NAN;
+        arma_rsq(i, 0) = NA_REAL;
         
       }
       
@@ -2130,13 +2400,12 @@ struct RollLmSlices : public Worker {
   
 };
 
-// [[Rcpp::export]]
-List roll_lm(const NumericMatrix& x, const NumericVector& y,
-             const int& width, const arma::vec& weights,
-             const bool& center_x, const bool& center_y,
-             const bool& scale_x, const bool& scale_y,
-             const int& min_obs, const bool& complete_obs,
-             const bool& na_restore, const std::string& parallel_for) {
+List roll_lm_z(const NumericMatrix& x, const NumericVector& y,
+               const int& width, const arma::vec& weights,
+               const bool& center_x, const bool& center_y,
+               const bool& scale_x, const bool& scale_y,
+               const int& min_obs, const bool& complete_obs,
+               const bool& na_restore, const std::string& parallel_for) {
   
   int n_rows = x.nrow();  
   int n_cols = x.ncol() + 1;
@@ -2158,7 +2427,7 @@ List roll_lm(const NumericMatrix& x, const NumericVector& y,
   std::copy(x.begin(), x.end(), data.begin());
   std::copy(y.begin(), y.end(), data.begin() + n_rows * (n_cols - 1));
   
-  // Check 'width' argument for errors
+  // check 'width' argument for errors
   check_width(width, n_rows);
   
   // default 'weights' argument is equal-weighted,
@@ -2178,7 +2447,7 @@ List roll_lm(const NumericMatrix& x, const NumericVector& y,
   }
   
   // default 'center' argument subtracts mean of each variable,
-  // otherwise no scaling is done
+  // otherwise zero is used
   if (center_x || center_y) {
     if (parallel_for == "rows") {
       RollMeanRowsCube roll_mean_rows(data, n_rows, n_cols, width, weights,
@@ -2258,34 +2527,139 @@ List roll_lm(const NumericMatrix& x, const NumericVector& y,
                               arma_coef, arma_rsq);
   parallelFor(0, n_rows, roll_lm_slices);
   
-  // create and return a matrix or xts object for coefficients
-  NumericMatrix coef(wrap(arma_coef));
-  List dimnames = x.attr("dimnames");
-  coef.attr("dimnames") = dimnames_ols(dimnames, n_cols - 1);
-  coef.attr("index") = x.attr("index");
-  coef.attr(".indexCLASS") = x.attr(".indexCLASS");
-  coef.attr(".indexTZ") = x.attr(".indexTZ");
-  coef.attr("tclass") = x.attr("tclass");
-  coef.attr("tzone") = x.attr("tzone");
-  coef.attr("class") = x.attr("class");
-  
-  // create and return a matrix or xts object for r-squared
-  NumericMatrix rsq(wrap(arma_rsq));
-  if (dimnames.size() > 1) {
-    rsq.attr("dimnames") = List::create(dimnames[0], "R-squared");
-  } else {
-    rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
-  }
-  rsq.attr("index") = x.attr("index");
-  rsq.attr(".indexCLASS") = x.attr(".indexCLASS");
-  rsq.attr(".indexTZ") = x.attr(".indexTZ");
-  rsq.attr("tclass") = x.attr("tclass");
-  rsq.attr("tzone") = x.attr("tzone");
-  rsq.attr("class") = x.attr("class");
-  
   // create and return a list
-  List result = List::create(Named("coefficients") = coef,
-                             Named("r.squared") = rsq);
+  List result = List::create(Named("coefficients") = arma_coef,
+                             Named("r.squared") = arma_rsq);
+  
+  return result;
+  
+}
+
+// [[Rcpp::export]]
+List roll_lm(const NumericMatrix& x, const NumericMatrix& y,
+             const int& width, const arma::vec& weights,
+             const bool& center_x, const bool& center_y,
+             const bool& scale_x, const bool& scale_y,
+             const int& min_obs, const bool& complete_obs,
+             const bool& na_restore, const std::string& parallel_for) {
+  
+  int n_rows = x.nrow();  
+  int n_cols = x.ncol() + 1;
+  int y_n_cols = y.ncol();
+  List result_z(2);
+  List result_coef(y_n_cols);
+  List result_rsq(y_n_cols);
+  List result(2);
+  
+  // create a list of matrices,
+  // otherwise a list of lists
+  if (y_n_cols == 1) {
+    
+    result_z = roll_lm_z(x, y(_, 0),
+                         width, weights,
+                         center_x, center_y,
+                         scale_x, scale_y,
+                         min_obs, complete_obs,
+                         na_restore, parallel_for);
+    
+    arma::mat arma_coef_z = result_z[0];
+    arma::mat arma_rsq_z = result_z[1];
+    
+    // create and return a matrix or xts object for coefficients
+    NumericVector coef(wrap(arma_coef_z));
+    coef.attr("dim") = IntegerVector::create(n_rows, n_cols);
+    List x_dimnames = x.attr("dimnames");
+    coef.attr("dimnames") = dimnames_ols(x_dimnames, n_cols - 1);
+    coef.attr("index") = x.attr("index");
+    coef.attr(".indexCLASS") = x.attr(".indexCLASS");
+    coef.attr(".indexTZ") = x.attr(".indexTZ");
+    coef.attr("tclass") = x.attr("tclass");
+    coef.attr("tzone") = x.attr("tzone");
+    coef.attr("class") = x.attr("class");
+    
+    // create and return a matrix or xts object for r-squareds
+    NumericVector rsq(wrap(arma_rsq_z));
+    rsq.attr("dim") = IntegerVector::create(n_rows, 1);
+    if (x_dimnames.size() > 1) {
+      rsq.attr("dimnames") = List::create(x_dimnames[0], "R-squared");
+    } else {
+      rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
+    }
+    rsq.attr("index") = x.attr("index");
+    rsq.attr(".indexCLASS") = x.attr(".indexCLASS");
+    rsq.attr(".indexTZ") = x.attr(".indexTZ");
+    rsq.attr("tclass") = x.attr("tclass");
+    rsq.attr("tzone") = x.attr("tzone");
+    rsq.attr("class") = x.attr("class");
+    
+    List y_dimnames = y.attr("dimnames");
+    if (y_dimnames.size() > 1) {
+      result_coef.attr("names") = y_dimnames[1];
+      result_rsq.attr("names") = y_dimnames[1];
+    }
+    
+    // create and return a list
+    result = List::create(Named("coefficients") = coef,
+                          Named("r.squared") = rsq);
+    
+  } else {
+    
+    for (int z = 0; z < y_n_cols; z++) {
+      
+      result_z = roll_lm_z(x, y(_, z),
+                           width, weights,
+                           center_x, center_y,
+                           scale_x, scale_y,
+                           min_obs, complete_obs,
+                           na_restore, parallel_for);
+      
+      arma::mat arma_coef_z = result_z[0];
+      arma::mat arma_rsq_z = result_z[1];
+      
+      // create and return a matrix or xts object for coefficients
+      NumericVector coef(wrap(arma_coef_z));
+      coef.attr("dim") = IntegerVector::create(n_rows, n_cols);
+      List x_dimnames = x.attr("dimnames");
+      coef.attr("dimnames") = dimnames_ols(x_dimnames, n_cols - 1);
+      coef.attr("index") = x.attr("index");
+      coef.attr(".indexCLASS") = x.attr(".indexCLASS");
+      coef.attr(".indexTZ") = x.attr(".indexTZ");
+      coef.attr("tclass") = x.attr("tclass");
+      coef.attr("tzone") = x.attr("tzone");
+      coef.attr("class") = x.attr("class");
+      
+      // create and return a matrix or xts object for r-squareds
+      NumericVector rsq(wrap(arma_rsq_z));
+      rsq.attr("dim") = IntegerVector::create(n_rows, 1);
+      if (x_dimnames.size() > 1) {
+        rsq.attr("dimnames") = List::create(x_dimnames[0], "R-squared");
+      } else {
+        rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
+      }
+      rsq.attr("index") = x.attr("index");
+      rsq.attr(".indexCLASS") = x.attr(".indexCLASS");
+      rsq.attr(".indexTZ") = x.attr(".indexTZ");
+      rsq.attr("tclass") = x.attr("tclass");
+      rsq.attr("tzone") = x.attr("tzone");
+      rsq.attr("class") = x.attr("class");
+      
+      result_coef(z) = coef;
+      result_rsq(z) = rsq;
+      
+    }
+    
+    // add names to each list
+    List y_dimnames = y.attr("dimnames");
+    if (y_dimnames.size() > 1) {
+      result_coef.attr("names") = y_dimnames[1];
+      result_rsq.attr("names") = y_dimnames[1];
+    }
+    
+    // create and return a list
+    result = List::create(Named("coefficients") = result_coef,
+                          Named("r.squared") = result_rsq);
+    
+  }
   
   return result;
   
@@ -2350,10 +2724,10 @@ struct RollEigenSlices : public Worker {
         } else if (!status) {
           
           arma::vec no_solution_row(n_cols);
-          no_solution_row.fill(NAN);
+          no_solution_row.fill(NA_REAL);
           
           arma::mat no_solution_slice(n_cols, n_cols);
-          no_solution_slice.fill(NAN);
+          no_solution_slice.fill(NA_REAL);
           
           arma_eigen_values.row(i) = trans(no_solution_row);
           arma_eigen_vectors.slice(i) = no_solution_slice;
@@ -2363,10 +2737,10 @@ struct RollEigenSlices : public Worker {
       } else {
         
         arma::vec no_solution_row(n_cols);
-        no_solution_row.fill(NAN);
+        no_solution_row.fill(NA_REAL);
         
         arma::mat no_solution_slice(n_cols, n_cols);
-        no_solution_slice.fill(NAN);
+        no_solution_slice.fill(NA_REAL);
         
         arma_eigen_values.row(i) = trans(no_solution_row);
         arma_eigen_vectors.slice(i) = no_solution_slice;
@@ -2421,7 +2795,7 @@ List roll_eigen(const NumericMatrix& data, const int& width,
   }
   
   // default 'center' argument subtracts mean of each variable,
-  // otherwise no scaling is done
+  // otherwise zero is used
   if (center) {
     if (parallel_for == "rows") {
       RollMeanRowsCube roll_mean_rows(data, n_rows, n_cols, width, weights,
@@ -2628,20 +3002,20 @@ struct RollPcrSlices : public Worker {
         } else if (!status) {
           
           arma::vec no_solution(n_cols);
-          no_solution.fill(NAN);
+          no_solution.fill(NA_REAL);
           
           arma_coef.row(i) = trans(no_solution);
-          arma_rsq[i] = NAN;
+          arma_rsq[i] = NA_REAL;
           
         }
         
       } else {
         
         arma::vec no_solution(n_cols);
-        no_solution.fill(NAN);
+        no_solution.fill(NA_REAL);
         
         arma_coef.row(i) = trans(no_solution);
-        arma_rsq[i] = NAN;
+        arma_rsq[i] = NA_REAL;
         
       }
       
@@ -2650,14 +3024,13 @@ struct RollPcrSlices : public Worker {
   
 };
 
-// [[Rcpp::export]]
-List roll_pcr(const NumericMatrix& x, const NumericVector& y,
-              const int& width, const arma::uvec& comps,
-              const arma::vec& weights, const bool& center_x,
-              const bool& center_y, const bool& scale_x,
-              const bool& scale_y, const int& min_obs,
-              const bool& complete_obs, const bool& na_restore,
-              const std::string& parallel_for) {
+List roll_pcr_z(const NumericMatrix& x, const NumericVector& y,
+                const int& width, const arma::uvec& comps,
+                const arma::vec& weights, const bool& center_x,
+                const bool& center_y, const bool& scale_x,
+                const bool& scale_y, const int& min_obs,
+                const bool& complete_obs, const bool& na_restore,
+                const std::string& parallel_for) {
   
   int n_rows = x.nrow();
   int n_cols = x.ncol() + 1;
@@ -2704,7 +3077,7 @@ List roll_pcr(const NumericMatrix& x, const NumericVector& y,
   }
   
   // default 'center' argument subtracts mean of each variable,
-  // otherwise no scaling is done
+  // otherwise zero is used
   if (center_x || center_y) {
     if (parallel_for == "rows") {
       RollMeanRowsCube roll_mean_rows(data, n_rows, n_cols, width, weights,
@@ -2789,34 +3162,142 @@ List roll_pcr(const NumericMatrix& x, const NumericVector& y,
                                 arma_rsq);
   parallelFor(0, n_rows, roll_pcr_slices);
   
-  // create and return a matrix or xts object for coefficients
-  NumericMatrix coef(wrap(arma_coef));
-  List dimnames = x.attr("dimnames");
-  coef.attr("dimnames") = dimnames_ols(dimnames, n_cols - 1);
-  coef.attr("index") = x.attr("index");
-  coef.attr(".indexCLASS") = x.attr(".indexCLASS");
-  coef.attr(".indexTZ") = x.attr(".indexTZ");
-  coef.attr("tclass") = x.attr("tclass");
-  coef.attr("tzone") = x.attr("tzone");
-  coef.attr("class") = x.attr("class");
-  
-  // create and return a matrix or xts object for r-squared
-  NumericMatrix rsq(wrap(arma_rsq));
-  if (dimnames.size() > 1) {
-    rsq.attr("dimnames") = List::create(dimnames[0], "R-squared");
-  } else {
-    rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
-  }
-  rsq.attr("index") = x.attr("index");
-  rsq.attr(".indexCLASS") = x.attr(".indexCLASS");
-  rsq.attr(".indexTZ") = x.attr(".indexTZ");
-  rsq.attr("tclass") = x.attr("tclass");
-  rsq.attr("tzone") = x.attr("tzone");
-  rsq.attr("class") = x.attr("class");
-  
   // create and return a list
-  List result = List::create(Named("coefficients") = coef,
-                             Named("r.squared") = rsq);
+  List result = List::create(Named("coefficients") = arma_coef,
+                             Named("r.squared") = arma_rsq);
+  
+  return result;
+  
+}
+
+// [[Rcpp::export]]
+List roll_pcr(const NumericMatrix& x, const NumericMatrix& y,
+              const int& width, const arma::uvec& comps,
+              const arma::vec& weights, const bool& center_x,
+              const bool& center_y, const bool& scale_x,
+              const bool& scale_y, const int& min_obs,
+              const bool& complete_obs, const bool& na_restore,
+              const std::string& parallel_for) {
+  
+  int n_rows = x.nrow();  
+  int n_cols = x.ncol() + 1;
+  int y_n_cols = y.ncol();
+  List result_z(2);
+  List result_coef(y_n_cols);
+  List result_rsq(y_n_cols);
+  List result(2);
+  
+  // create a list of matrices,
+  // otherwise a list of lists
+  if (y_n_cols == 1) {
+    
+    result_z = roll_pcr_z(x, y(_, 0),
+                          width, comps, 
+                          weights, center_x,
+                          center_y, scale_x,
+                          scale_y, min_obs,
+                          complete_obs, na_restore, 
+                          parallel_for);
+    
+    arma::mat arma_coef_z = result_z[0];
+    arma::mat arma_rsq_z = result_z[1];
+    
+    // create and return a matrix or xts object for coefficients
+    NumericVector coef(wrap(arma_coef_z));
+    coef.attr("dim") = IntegerVector::create(n_rows, n_cols);
+    List x_dimnames = x.attr("dimnames");
+    coef.attr("dimnames") = dimnames_ols(x_dimnames, n_cols - 1);
+    coef.attr("index") = x.attr("index");
+    coef.attr(".indexCLASS") = x.attr(".indexCLASS");
+    coef.attr(".indexTZ") = x.attr(".indexTZ");
+    coef.attr("tclass") = x.attr("tclass");
+    coef.attr("tzone") = x.attr("tzone");
+    coef.attr("class") = x.attr("class");
+    
+    // create and return a matrix or xts object for r-squareds
+    NumericVector rsq(wrap(arma_rsq_z));
+    rsq.attr("dim") = IntegerVector::create(n_rows, 1);
+    if (x_dimnames.size() > 1) {
+      rsq.attr("dimnames") = List::create(x_dimnames[0], "R-squared");
+    } else {
+      rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
+    }
+    rsq.attr("index") = x.attr("index");
+    rsq.attr(".indexCLASS") = x.attr(".indexCLASS");
+    rsq.attr(".indexTZ") = x.attr(".indexTZ");
+    rsq.attr("tclass") = x.attr("tclass");
+    rsq.attr("tzone") = x.attr("tzone");
+    rsq.attr("class") = x.attr("class");
+    
+    List y_dimnames = y.attr("dimnames");
+    if (y_dimnames.size() > 1) {
+      result_coef.attr("names") = y_dimnames[1];
+      result_rsq.attr("names") = y_dimnames[1];
+    }
+    
+    // create and return a list
+    result = List::create(Named("coefficients") = coef,
+                          Named("r.squared") = rsq);
+    
+  } else {
+    
+    for (int z = 0; z < y_n_cols; z++) {
+      
+      result_z = roll_pcr_z(x, y(_, z),
+                            width, comps, 
+                            weights, center_x,
+                            center_y, scale_x,
+                            scale_y, min_obs,
+                            complete_obs, na_restore, 
+                            parallel_for);
+      
+      arma::mat arma_coef_z = result_z[0];
+      arma::mat arma_rsq_z = result_z[1];
+      
+      // create and return a matrix or xts object for coefficients
+      NumericVector coef(wrap(arma_coef_z));
+      coef.attr("dim") = IntegerVector::create(n_rows, n_cols);
+      List x_dimnames = x.attr("dimnames");
+      coef.attr("dimnames") = dimnames_ols(x_dimnames, n_cols - 1);
+      coef.attr("index") = x.attr("index");
+      coef.attr(".indexCLASS") = x.attr(".indexCLASS");
+      coef.attr(".indexTZ") = x.attr(".indexTZ");
+      coef.attr("tclass") = x.attr("tclass");
+      coef.attr("tzone") = x.attr("tzone");
+      coef.attr("class") = x.attr("class");
+      
+      // create and return a matrix or xts object for r-squareds
+      NumericVector rsq(wrap(arma_rsq_z));
+      rsq.attr("dim") = IntegerVector::create(n_rows, 1);
+      if (x_dimnames.size() > 1) {
+        rsq.attr("dimnames") = List::create(x_dimnames[0], "R-squared");
+      } else {
+        rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
+      }
+      rsq.attr("index") = x.attr("index");
+      rsq.attr(".indexCLASS") = x.attr(".indexCLASS");
+      rsq.attr(".indexTZ") = x.attr(".indexTZ");
+      rsq.attr("tclass") = x.attr("tclass");
+      rsq.attr("tzone") = x.attr("tzone");
+      rsq.attr("class") = x.attr("class");
+      
+      result_coef(z) = coef;
+      result_rsq(z) = rsq;
+      
+    }
+    
+    // add names to each list
+    List y_dimnames = y.attr("dimnames");
+    if (y_dimnames.size() > 1) {
+      result_coef.attr("names") = y_dimnames[1];
+      result_rsq.attr("names") = y_dimnames[1];
+    }
+    
+    // create and return a list
+    result = List::create(Named("coefficients") = result_coef,
+                          Named("r.squared") = result_rsq);
+    
+  }
   
   return result;
   
@@ -2828,16 +3309,13 @@ struct RollLmVifSlices : public Worker {
   const arma::cube arma_cov;  // source
   const int n_rows;
   const int n_cols;
-  const arma::uvec arma_cols;
   arma::mat& arma_vif;        // destination (pass by reference)
   
   // initialize with source and destination
   RollLmVifSlices(const arma::cube arma_cov, const int n_rows,
-                  const int n_cols, const arma::uvec arma_cols,
-                  arma::mat& arma_vif)
+                  const int n_cols, arma::mat& arma_vif)
     : arma_cov(arma_cov), n_rows(n_rows),
-      n_cols(n_cols), arma_cols(arma_cols),
-      arma_vif(arma_vif) { }
+      n_cols(n_cols), arma_vif(arma_vif) { }
   
   // function call operator that iterates by slice
   void operator()(std::size_t begin_slice, std::size_t end_slice) {
@@ -2886,7 +3364,7 @@ struct RollLmVifSlices : public Worker {
             
             
           } else if (!status) {
-            arma_vif(i, j) = NAN;
+            arma_vif(i, j) = NA_REAL;
           }
           
         }
@@ -2894,109 +3372,7 @@ struct RollLmVifSlices : public Worker {
       } else {
         
         arma::vec no_solution(n_cols);
-        no_solution.fill(NAN);
-        
-        arma_vif.row(i) = trans(no_solution);
-        
-      }
-      
-    }
-  }
-  
-};
-
-// 'Worker' function for rolling OLS regressions
-struct RollPcrVifSlices : public Worker {
-  
-  const arma::cube arma_cov;    // source
-  const int n_rows;
-  const int n_cols;
-  const arma::uvec arma_cols;
-  const arma::uvec arma_comps;  
-  arma::mat& arma_vif;          // destination (pass by reference)
-  
-  // initialize with source and destination
-  RollPcrVifSlices(const arma::cube arma_cov, const int n_rows,
-                   const int n_cols, const arma::uvec arma_cols,
-                   const arma::uvec arma_comps, arma::mat& arma_vif)
-    : arma_cov(arma_cov), n_rows(n_rows),
-      n_cols(n_cols), arma_cols(arma_cols),
-      arma_comps(arma_comps), arma_vif(arma_vif) { }
-  
-  // function call operator that iterates by slice
-  void operator()(std::size_t begin_slice, std::size_t end_slice) {
-    for (std::size_t i = begin_slice; i < end_slice; i++) {
-      
-      arma::mat x = arma_cov.slice(i);
-      
-      int j = 0;
-      int k = 0;
-      bool any_na = false;
-      
-      // check if missing value is present
-      while ((!any_na) && (j * k < (n_cols - 1) * (n_cols - 1))) {
-        for (j = 0; j < n_cols; j++) {
-          for (k = 0; k < n_cols; k++) {
-            if (std::isnan(x(j, k)))
-              any_na = true;
-          }
-        }
-      }
-      
-      // don't compute if missing value 
-      if (!any_na) {
-        
-        for (int j = 0; j < n_cols; j++) {
-          
-          arma::mat x = arma_cov.slice(i);
-          x.swap_cols(j, n_cols - 1);
-          x.swap_rows(j, n_cols - 1);
-          
-          arma::mat A = x.submat(0, 0, n_cols - 2, n_cols - 2);
-          arma::mat b = x.submat(0, n_cols - 1, n_cols - 2, n_cols - 1);
-          arma::vec eigen_values(n_cols - 1);
-          arma::mat eigen_vectors(n_cols - 1, n_cols - 1);
-          arma::vec gamma(n_cols - 1);
-          
-          // check if eig_sym solution is found
-          bool status1 = arma::eig_sym(eigen_values, eigen_vectors, A);
-          
-          // don't find approximate solution for rank deficient system
-          if (status1) {
-            
-            // reverse order for consistency with R's eigen
-            std::reverse(eigen_values.begin(), eigen_values.end());
-            eigen_vectors = arma::fliplr(eigen_vectors);
-            
-            // check if solution is found
-            bool status2 = arma::solve(gamma, A * eigen_vectors, b);
-            
-            // don't find approximate solution for rank deficient system
-            if (status2) {
-              
-              arma::vec gamma_subset = gamma(arma_comps - 1);
-              arma::vec coef = eigen_vectors.submat(arma_cols, arma_comps - 1) * gamma_subset;
-              
-              // r-squared
-              double rsq = as_scalar((trans(coef) * A * coef) /
-                                       x.submat(n_cols - 1, n_cols - 1, n_cols - 1, n_cols - 1));
-              
-              arma_vif(i, j) = 1 / (1 - rsq);
-              
-            } else if (!status2) {
-              arma_vif(i, j) = NAN;
-            }
-            
-          } else if (!status1) {
-            arma_vif(i, j) = NAN;
-          }
-          
-        }
-        
-      } else {
-        
-        arma::vec no_solution(n_cols);
-        no_solution.fill(NAN);
+        no_solution.fill(NA_REAL);
         
         arma_vif.row(i) = trans(no_solution);
         
@@ -3009,10 +3385,10 @@ struct RollPcrVifSlices : public Worker {
 
 // [[Rcpp::export]]
 NumericMatrix roll_vif(const NumericMatrix& data, const int& width,
-                       const arma::uvec& comps, const arma::vec& weights,
-                       const bool& center, const bool& scale,
-                       const int& min_obs, const bool& complete_obs,
-                       const bool& na_restore, const std::string& parallel_for) {
+                       const arma::vec& weights, const bool& center,
+                       const bool& scale, const int& min_obs,
+                       const bool& complete_obs, const bool& na_restore,
+                       const std::string& parallel_for) {
   
   int n_rows = data.nrow();
   int n_cols = data.ncol();
@@ -3035,9 +3411,6 @@ NumericMatrix roll_vif(const NumericMatrix& data, const int& width,
   // check 'width' argument for errors
   check_width(width, n_rows);
   
-  // default 'comps' argument is all components
-  check_comps_vif(comps, n_cols - 1);
-  
   // default 'weights' argument is equal-weighted,
   // otherwise check argument for errors
   check_weights(weights, width);
@@ -3055,7 +3428,7 @@ NumericMatrix roll_vif(const NumericMatrix& data, const int& width,
   }
   
   // default 'center' argument subtracts mean of each variable,
-  // otherwise no scaling is done
+  // otherwise zero is used
   if (center) {
     if (parallel_for == "rows") {
       RollMeanRowsCube roll_mean_rows(data, n_rows, n_cols, width, weights,
@@ -3110,16 +3483,8 @@ NumericMatrix roll_vif(const NumericMatrix& data, const int& width,
   }
   
   // compute rolling variance inflation factors
-  arma::uvec arma_cols = seq(n_cols - 1);
-  if (comps.size() == arma_cols.size()) {
-    RollLmVifSlices roll_lm_vif_slices(arma_cov, n_rows, n_cols, arma_cols,
-                                       arma_vif);
-    parallelFor(0, n_rows, roll_lm_vif_slices);
-  } else {
-    RollPcrVifSlices roll_pcr_vif_slices(arma_cov, n_rows, n_cols, arma_cols,
-                                         comps, arma_vif);
-    parallelFor(0, n_rows, roll_pcr_vif_slices);
-  }
+  RollLmVifSlices roll_lm_vif_slices(arma_cov, n_rows, n_cols, arma_vif);
+  parallelFor(0, n_rows, roll_lm_vif_slices);
   
   // create and return a matrix or xts object for variance inflation factors 
   NumericMatrix result(wrap(arma_vif));

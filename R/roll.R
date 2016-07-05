@@ -148,6 +148,60 @@ roll_sd <- function(data, width, weights = rep(1, width), center = TRUE,
   ))
 }
 
+##' Rolling Scaling and Centering
+##'
+##' A parallel function for computing rolling scaling and centering of time-series data.
+##'
+##' @param data matrix or xts object. Rows are observations and columns are variables.
+##' @param width integer. Window size.
+##' @param weights vector. Weights for each observation within a window.
+##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
+##' if \code{FALSE} then zero is used.
+##' @param scale logical. If \code{TRUE} then the weighted standard deviation of each variable is used,
+##' if \code{FALSE} then no scaling is done.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is NA.
+##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
+##' if \code{FALSE} then each value is used.
+##' @param na_restore logical. Should missing values be restored?
+##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
+##' \code{rows} or \code{cols}.
+##' @return An object of the same class and dimension as \code{data} with the rolling scaling and centering.
+##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
+##' @examples
+##' n_vars <- 10
+##' n_obs <- 1000
+##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
+##' 
+##' # 252-day rolling z-score
+##' result <- roll_scale(data, 252)
+##' 
+##' # Equivalent to 'na.rm = TRUE'
+##' result <- roll_scale(data, 252, min_obs = 1)
+##' 
+##' # Expanding window
+##' result <- roll_scale(data, n_obs, min_obs = 1)
+##' 
+##' # Exponential decay
+##' weights <- 0.9 ^ (251:0)
+##' result <- roll_scale(data, 252, weights, min_obs = 1)
+##' @export
+roll_scale <- function(data, width, weights = rep(1, width), center = TRUE, scale = TRUE,
+                       min_obs = width, complete_obs = FALSE, na_restore = FALSE,
+                       parallel_for = c("rows", "cols")) {
+  return(.Call('roll_roll_scale', PACKAGE = 'roll',
+               data,
+               as.integer(width),
+               as.numeric(weights),
+               as.logical(center),
+               as.logical(scale),
+               as.integer(min_obs),
+               as.logical(complete_obs),
+               as.logical(na_restore),
+               as.character(match.arg(parallel_for))
+  ))
+}
+
 ##' Rolling Covariance Matrices
 ##'
 ##' A parallel function for computing rolling covariance matrices of time-series data.
@@ -261,17 +315,19 @@ roll_cor <- function(data, width, weights = rep(1, width), center = TRUE, scale 
 ##' A parallel function for computing rolling linear models of time-series data.
 ##' 
 ##' @param x matrix or xts object. Rows are observations and columns are the independent variables.
-##' @param y vector or xts object. Rows are observations and column is the dependent variable.
+##' @param y matrix or xts object. Rows are observations and columns are the dependent variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
+##' @param center logical. \code{center = z} is shorthand for \code{center_x = z} and
+##' \code{center_y = z}, where \code{z} is either \code{TRUE} or \code{FALSE}.
 ##' @param center_x logical. If \code{TRUE} then the weighted mean of each \code{x} variable is used,
 ##' if \code{FALSE} then zero is used.
-##' @param center_y logical. If \code{TRUE} then the weighted mean of the \code{y} variable is used,
-##' if \code{FALSE} then zero is used.
+##' @param center_y logical. Analogous to \code{center_x}.
+##' @param scale logical. \code{scale = z} is shorthand for \code{scale_x = z} and
+##' \code{scale_y = z}, where \code{z} is either \code{TRUE} or \code{FALSE}.
 ##' @param scale_x logical. If \code{TRUE} then the weighted standard deviation of each \code{x} 
 ##' variable is used, if \code{FALSE} then no scaling is done.
-##' @param scale_y logical. If \code{TRUE} then the weighted standard deviation of the \code{y} 
-##' variable is used, if \code{FALSE} then no scaling is done.
+##' @param scale_y logical. Analogous to \code{scale_x}.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window, 
 ##' otherwise result is NA.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
@@ -280,8 +336,10 @@ roll_cor <- function(data, width, weights = rep(1, width), center = TRUE, scale 
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
 ##' @return A list containing the following components:
-##' \item{coefficients}{An object of the same class and dimension as \code{x} with the rolling coefficients.}
-##' \item{r.squared}{An object of the same class as \code{x} with the rolling r-squareds.}
+##' \item{coefficients}{A list of objects with the rolling coefficients for each \code{y}.
+##' An object is the same class and dimension (with an added column for the intercept) as \code{x}.}
+##' \item{r.squared}{A list of objects with the rolling r-squareds for each \code{y}.
+##' An object is the same class as \code{x}}
 ##' @note If users are already taking advantage of parallelism using multithreaded BLAS/LAPACK
 ##' libraries, then limit the number of cores in the RcppParallel package to one with the
 ##' \code{\link[RcppParallel]{setThreadOptions}} function.
@@ -305,8 +363,10 @@ roll_cor <- function(data, width, weights = rep(1, width), center = TRUE, scale 
 ##' weights <- 0.9 ^ (251:0)
 ##' result <- roll_lm(x, y, 252, weights, min_obs = 1)
 ##' @export
-roll_lm <- function(x, y, width, weights = rep(1, width), center_x = TRUE, center_y = TRUE,
-                    scale_x = FALSE, scale_y = FALSE, min_obs = width, complete_obs = TRUE,
+roll_lm <- function(x, y, width, weights = rep(1, width),
+                    center = TRUE, center_x = center, center_y = center,
+                    scale = FALSE, scale_x = scale, scale_y = scale,
+                    min_obs = width, complete_obs = TRUE,
                     na_restore = FALSE, parallel_for = c("rows", "cols")) {
   return(.Call('roll_roll_lm', PACKAGE = 'roll',
                x,
@@ -388,18 +448,20 @@ roll_eigen <- function(data, width, weights = rep(1, width), center = TRUE, scal
 ##' A parallel function for computing rolling principal component regressions of time-series data.
 ##' 
 ##' @param x matrix or xts object. Rows are observations and columns are the independent variables.
-##' @param y vector or xts object. Rows are observations and column is the dependent variable.
+##' @param y matrix or xts object. Rows are observations and columns are the dependent variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param comps integer vector. Select a subset of principal components.
+##' @param center logical. \code{center = z} is shorthand for \code{center_x = z} and
+##' \code{center_y = z}, where \code{z} is either \code{TRUE} or \code{FALSE}.
 ##' @param center_x logical. If \code{TRUE} then the weighted mean of each \code{x} variable is used,
 ##' if \code{FALSE} then zero is used.
-##' @param center_y logical. If \code{TRUE} then the weighted mean of the \code{y} variable is used,
-##' if \code{FALSE} then zero is used.
+##' @param center_y logical. Analogous to \code{center_x}.
+##' @param scale logical. \code{scale = z} is shorthand for \code{scale_x = z} and
+##' \code{scale_y = z}, where \code{z} is either \code{TRUE} or \code{FALSE}.
 ##' @param scale_x logical. If \code{TRUE} then the weighted standard deviation of each \code{x} 
 ##' variable is used, if \code{FALSE} then no scaling is done.
-##' @param scale_y logical. If \code{TRUE} then the weighted standard deviation of the \code{y} 
-##' variable is used, if \code{FALSE} then no scaling is done.
+##' @param scale_y logical. Analogous to \code{scale_x}.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window, 
 ##' otherwise result is NA.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
@@ -408,8 +470,10 @@ roll_eigen <- function(data, width, weights = rep(1, width), center = TRUE, scal
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
 ##' @return A list containing the following components:
-##' \item{coefficients}{An object of the same class and dimension as \code{x} with the rolling coefficients.}
-##' \item{r.squared}{An object of the same class as \code{x} with the rolling r-squareds.}
+##' \item{coefficients}{A list of objects with the rolling coefficients for each \code{y}.
+##' An object is the same class and dimension (with an added column for the intercept) as \code{x}.}
+##' \item{r.squared}{A list of objects with the rolling r-squareds for each \code{y}.
+##' An object is the same class as \code{x}}
 ##' @note If users are already taking advantage of parallelism using multithreaded BLAS/LAPACK
 ##' libraries, then limit the number of cores in the RcppParallel package to one with the
 ##' \code{\link[RcppParallel]{setThreadOptions}} function.
@@ -434,8 +498,9 @@ roll_eigen <- function(data, width, weights = rep(1, width), center = TRUE, scal
 ##' result <- roll_pcr(x, y, 252, comps = 1, weights, min_obs = 1)
 ##' @export
 roll_pcr <- function(x, y, width, comps = 1:ncol(x), weights = rep(1, width),
-                     center_x = TRUE, center_y = TRUE, scale_x = FALSE,
-                     scale_y = FALSE, min_obs = width, complete_obs = TRUE,
+                     center = TRUE, center_x = center, center_y = center,
+                     scale = FALSE, scale_x = scale, scale_y = scale,
+                     min_obs = width, complete_obs = TRUE,
                      na_restore = FALSE, parallel_for = c("rows", "cols")) {
   return(.Call('roll_roll_pcr', PACKAGE = 'roll',
                x,
@@ -461,7 +526,6 @@ roll_pcr <- function(x, y, width, comps = 1:ncol(x), weights = rep(1, width),
 ##' @param data matrix or xts object. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
-##' @param comps integer vector. Select a subset of principal components.
 ##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
 ##' if \code{FALSE} then zero is used.
 ##' @param scale logical. If \code{TRUE} then the weighted standard deviation of each variable is used,
@@ -484,11 +548,8 @@ roll_pcr <- function(x, y, width, comps = 1:ncol(x), weights = rep(1, width),
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling variance inflation factors (lm)
+##' # 252-day rolling variance inflation factors
 ##' result <- roll_vif(data, 252)
-##' 
-##' # 252-day rolling variance inflation factors (pcr)
-##' result <- roll_vif(data, 252, comps = 1)
 ##' 
 ##' # Equivalent to 'na.rm = TRUE'
 ##' result <- roll_vif(data, 252, min_obs = 1)
@@ -498,15 +559,14 @@ roll_pcr <- function(x, y, width, comps = 1:ncol(x), weights = rep(1, width),
 ##' 
 ##' # Exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_vif(data, 252, weights = weights, min_obs = 1)
+##' result <- roll_vif(data, 252, weights, min_obs = 1)
 ##' @export
-roll_vif <- function(data, width, comps = 1:(ncol(data) - 1), weights = rep(1, width),
-                     center = TRUE, scale = FALSE, min_obs = width, complete_obs = TRUE,
-                     na_restore = FALSE, parallel_for = c("rows", "cols")) {
+roll_vif <- function(data, width, weights = rep(1, width), center = TRUE, scale = FALSE,
+                     min_obs = width, complete_obs = TRUE, na_restore = FALSE,
+                     parallel_for = c("rows", "cols")) {
   return(.Call('roll_roll_vif', PACKAGE = 'roll',
                data,
                as.integer(width),
-               as.numeric(comps),
                as.numeric(weights),
                as.logical(center),
                as.logical(scale),
