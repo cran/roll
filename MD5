@@ -1,9 +1,9 @@
-bb805e8b91fef4264e4c45420a6b5a0e *DESCRIPTION
+db5545e281988357d5f57ef8f8418458 *DESCRIPTION
 e2c7c7f20ea9244f57a9a28e1349fc72 *NAMESPACE
-908b8cf11dfd756dd950fa8c36c7fdcc *NEWS.md
+798671ede0355761fde74be7e6c73921 *NEWS.md
 5f2e30a1f5417a2509dfcccd6213734e *R/RcppExports.R
 81e249b09124e9b9afcb2d121332e892 *R/roll.R
-85e3db31bfcfaa069fb48ceae3ec765d *README.md
+cd8d36f52ecc881a34d632a7a09c2ddc *README.md
 324174853d19af537f7eff2d0e05bcce *man/roll_cor.Rd
 d73da14762c71af242d523effbd3fe6e *man/roll_cov.Rd
 577dda14621e510d206863048b3a8878 *man/roll_eigen.Rd
@@ -14,7 +14,7 @@ d73da14762c71af242d523effbd3fe6e *man/roll_cov.Rd
 b9b70e16354781d785efd9206c2fc224 *man/roll_sd.Rd
 6ebf9337df7d5466f5e4c577d9e3d2c6 *man/roll_var.Rd
 1f4ae4b1804d2f1a69ba6c78417aa79f *man/roll_vif.Rd
-2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars
-8d46d69896a1f1d31ed76035a0e49d67 *src/Makevars.win
+3115ba38d49113def2b2baf8df7d44ca *src/Makevars
+7bc1f521888858bb5d63e47c2b64d44e *src/Makevars.win
 268ba350e3df7ab2d968ab77b63915e9 *src/RcppExports.cpp
 fa6f24e561683d6a262aedf10bb01e4a *src/roll.cpp
