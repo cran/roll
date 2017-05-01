@@ -37,8 +37,8 @@ variable is used, if \code{FALSE} then no scaling is done.}
 
 \item{scale_y}{logical. Analogous to \code{scale_x}.}
 
-\item{min_obs}{integer. Minimum number of observations required to have a value within a window, 
-otherwise result is NA.}
+\item{min_obs}{integer. Minimum number of observations required to have a value within a window,
+otherwise result is \code{NA}.}
 
 \item{complete_obs}{logical. If \code{TRUE} then rows containing any missing values are removed,
 if \code{FALSE} then pairwise is used.}
@@ -58,9 +58,14 @@ An object is the same class as \code{x}.}
 \description{
 A parallel function for computing rolling linear models of time-series data.
 }
-\note{
-If users are already taking advantage of parallelism using multithreaded BLAS/LAPACK
-libraries, then limit the number of cores in the RcppParallel package to one with the
+\details{
+The numerical calculations use RcppParallel to parallelize rolling linear models of time-series data. 
+RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+
+By default, all the available cores on a machine are used for parallel algorithms. If users are 
+either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+threads, then set the number of threads in the RcppParallel package with the 
 \code{\link[RcppParallel]{setThreadOptions}} function.
 }
 \examples{
@@ -69,20 +74,10 @@ n_obs <- 1000
 x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 y <- matrix(rnorm(n_obs), nrow = n_obs, ncol = 1)
 
-# 252-day rolling regression
+# Rolling regressions
 result <- roll_lm(x, y, 252)
 
-# Equivalent to 'na.rm = TRUE'
-result <- roll_lm(x, y, 252, min_obs = 1)
-
-# Expanding window
-result <- roll_lm(x, y, n_obs, min_obs = 1)
-
-# Exponential decay
+# Rolling regressions with exponential decay
 weights <- 0.9 ^ (251:0)
-result <- roll_lm(x, y, 252, weights, min_obs = 1)
+result <- roll_lm(x, y, 252, weights)
 }
-\seealso{
-\code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
-}
-

@@ -1,3 +1,101 @@
+##' Rolling Sums
+##'
+##' A parallel function for computing rolling sums of time-series data.
+##'
+##' @param data matrix or xts object. Rows are observations and columns are variables.
+##' @param width integer. Window size.
+##' @param weights vector. Weights for each observation within a window.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
+##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
+##' if \code{FALSE} then each value is used.
+##' @param na_restore logical. Should missing values be restored?
+##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
+##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling sums of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
+##' @return An object of the same class and dimension as \code{data} with the rolling sums.
+##' @examples
+##' n_vars <- 10
+##' n_obs <- 1000
+##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
+##' 
+##' # Rolling sums
+##' result <- roll_sum(data, 252)
+##' 
+##' # Rolling sums with exponential decay
+##' weights <- 0.9 ^ (251:0)
+##' result <- roll_sum(data, 252, weights)
+##' @export
+roll_sum <- function(data, width, weights = rep(1, width),
+                     min_obs = width, complete_obs = FALSE, na_restore = FALSE,
+                     parallel_for = c("rows", "cols")) {
+  return(.Call(roll_roll_sum,
+               data,
+               as.integer(width),
+               as.numeric(weights),
+               as.integer(min_obs),
+               as.logical(complete_obs),
+               as.logical(na_restore),
+               as.character(match.arg(parallel_for))
+  ))
+}
+
+##' Rolling Products
+##'
+##' A parallel function for computing rolling products of time-series data.
+##'
+##' @param data matrix or xts object. Rows are observations and columns are variables.
+##' @param width integer. Window size.
+##' @param weights vector. Weights for each observation within a window.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
+##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
+##' if \code{FALSE} then each value is used.
+##' @param na_restore logical. Should missing values be restored?
+##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
+##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling products of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
+##' @return An object of the same class and dimension as \code{data} with the rolling products.
+##' @examples
+##' n_vars <- 10
+##' n_obs <- 1000
+##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
+##' 
+##' # Rolling products
+##' result <- roll_prod(data, 252)
+##' 
+##' # Rolling products with exponential decay
+##' weights <- 0.9 ^ (251:0)
+##' result <- roll_prod(data, 252, weights)
+##' @export
+roll_prod <- function(data, width, weights = rep(1, width),
+                      min_obs = width, complete_obs = FALSE, na_restore = FALSE,
+                      parallel_for = c("rows", "cols")) {
+  return(.Call(roll_roll_prod,
+               data,
+               as.integer(width),
+               as.numeric(weights),
+               as.integer(min_obs),
+               as.logical(complete_obs),
+               as.logical(na_restore),
+               as.character(match.arg(parallel_for))
+  ))
+}
+
 ##' Rolling Means
 ##'
 ##' A parallel function for computing rolling means of time-series data.
@@ -6,36 +104,37 @@
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
-##' otherwise result is NA.
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then each value is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling means of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return An object of the same class and dimension as \code{data} with the rolling means.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling mean
+##' # Rolling means
 ##' result <- roll_mean(data, 252)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_mean(data, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_mean(data, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling means with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_mean(data, 252, weights, min_obs = 1)
+##' result <- roll_mean(data, 252, weights)
 ##' @export
 roll_mean <- function(data, width, weights = rep(1, width),
                       min_obs = width, complete_obs = FALSE, na_restore = FALSE,
                       parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_mean', PACKAGE = 'roll',
+  return(.Call(roll_roll_mean,
                data,
                as.integer(width),
                as.numeric(weights),
@@ -56,36 +155,37 @@ roll_mean <- function(data, width, weights = rep(1, width),
 ##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
 ##' if \code{FALSE} then zero is used.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
-##' otherwise result is NA.
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then each value is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling variances of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return An object of the same class and dimension as \code{data} with the rolling variances.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling variance
+##' # Rolling variances
 ##' result <- roll_var(data, 252)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_var(data, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_var(data, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling variances with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_var(data, 252, weights, min_obs = 1)
+##' result <- roll_var(data, 252, weights)
 ##' @export
 roll_var <- function(data, width, weights = rep(1, width), center = TRUE,
                      min_obs = width, complete_obs = FALSE, na_restore = FALSE,
                      parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_var', PACKAGE = 'roll',
+  return(.Call(roll_roll_var,
                data,
                as.integer(width),
                as.numeric(weights),
@@ -107,36 +207,37 @@ roll_var <- function(data, width, weights = rep(1, width), center = TRUE,
 ##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
 ##' if \code{FALSE} then zero is used.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
-##' otherwise result is NA.
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then each value is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling standard deviations of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return An object of the same class and dimension as \code{data} with the rolling standard deviations.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling standard deviation
+##' # Rolling standard deviations
 ##' result <- roll_sd(data, 252)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_sd(data, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_sd(data, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling standard deviations with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_sd(data, 252, weights, min_obs = 1)
+##' result <- roll_sd(data, 252, weights)
 ##' @export
 roll_sd <- function(data, width, weights = rep(1, width), center = TRUE,
                     min_obs = width, complete_obs = FALSE, na_restore = FALSE,
                     parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_sd', PACKAGE = 'roll',
+  return(.Call(roll_roll_sd,
                data,
                as.integer(width),
                as.numeric(weights),
@@ -160,36 +261,37 @@ roll_sd <- function(data, width, weights = rep(1, width), center = TRUE,
 ##' @param scale logical. If \code{TRUE} then the weighted standard deviation of each variable is used,
 ##' if \code{FALSE} then no scaling is done.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
-##' otherwise result is NA.
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then each value is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling scaling and centering of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return An object of the same class and dimension as \code{data} with the rolling scaling and centering.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling z-score
+##' # Rolling z-scores
 ##' result <- roll_scale(data, 252)
-##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_scale(data, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_scale(data, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##'
+##' # Rolling z-scores with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_scale(data, 252, weights, min_obs = 1)
+##' result <- roll_scale(data, 252, weights)
 ##' @export
 roll_scale <- function(data, width, weights = rep(1, width), center = TRUE, scale = TRUE,
                        min_obs = width, complete_obs = FALSE, na_restore = FALSE,
                        parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_scale', PACKAGE = 'roll',
+  return(.Call(roll_roll_scale,
                data,
                as.integer(width),
                as.numeric(weights),
@@ -213,37 +315,38 @@ roll_scale <- function(data, width, weights = rep(1, width), center = TRUE, scal
 ##' if \code{FALSE} then zero is used.
 ##' @param scale logical. If \code{TRUE} then the weighted standard deviation of each variable is used,
 ##' if \code{FALSE} then no scaling is done.
-##' @param min_obs integer. Minimum number of observations required to have a value within a window, 
-##' otherwise result is NA.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then pairwise is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling covariance matrices of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return A cube with each slice the rolling covariance matrix.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling covariance matrix
+##' # Rolling covariance matrices
 ##' result <- roll_cov(data, 252)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_cov(data, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_cov(data, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling covariance matrices with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_cov(data, 252, weights, min_obs = 1)
+##' result <- roll_cov(data, 252, weights)
 ##' @export
 roll_cov <- function(data, width, weights = rep(1, width), center = TRUE, scale = FALSE,
                      min_obs = width, complete_obs = TRUE, na_restore = FALSE,
                      parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_cov', PACKAGE = 'roll',
+  return(.Call(roll_roll_cov,
                data,
                as.integer(width),
                as.numeric(weights),
@@ -267,37 +370,38 @@ roll_cov <- function(data, width, weights = rep(1, width), center = TRUE, scale 
 ##' if \code{FALSE} then zero is used.
 ##' @param scale logical. If \code{TRUE} then the weighted standard deviation of each variable is used,
 ##' if \code{FALSE} then no scaling is done.
-##' @param min_obs integer. Minimum number of observations required to have a value within a window, 
-##' otherwise result is NA.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then pairwise is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling correlation matrices of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return A cube with each slice the rolling correlation matrix.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling correlation matrix
+##' # Rolling correlation matrices
 ##' result <- roll_cor(data, 252)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_cor(data, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_cor(data, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling correlation matrices with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_cor(data, 252, weights, min_obs = 1)
+##' result <- roll_cor(data, 252, weights)
 ##' @export
 roll_cor <- function(data, width, weights = rep(1, width), center = TRUE, scale = TRUE,
                      min_obs = width, complete_obs = TRUE, na_restore = FALSE,
                      parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_cov', PACKAGE = 'roll',
+  return(.Call(roll_roll_cov,
                data,
                as.integer(width),
                as.numeric(weights),
@@ -329,47 +433,45 @@ roll_cor <- function(data, width, weights = rep(1, width), center = TRUE, scale 
 ##' @param scale_x logical. If \code{TRUE} then the weighted standard deviation of each \code{x} 
 ##' variable is used, if \code{FALSE} then no scaling is done.
 ##' @param scale_y logical. Analogous to \code{scale_x}.
-##' @param min_obs integer. Minimum number of observations required to have a value within a window, 
-##' otherwise result is NA.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then pairwise is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling linear models of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return A list containing the following components:
 ##' \item{coefficients}{A list of objects with the rolling coefficients for each \code{y}.
 ##' An object is the same class and dimension (with an added column for the intercept) as \code{x}.}
 ##' \item{r.squared}{A list of objects with the rolling r-squareds for each \code{y}.
 ##' An object is the same class as \code{x}.}
-##' @note If users are already taking advantage of parallelism using multithreaded BLAS/LAPACK
-##' libraries, then limit the number of cores in the RcppParallel package to one with the
-##' \code{\link[RcppParallel]{setThreadOptions}} function.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' y <- matrix(rnorm(n_obs), nrow = n_obs, ncol = 1)
 ##' 
-##' # 252-day rolling regression
+##' # Rolling regressions
 ##' result <- roll_lm(x, y, 252)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_lm(x, y, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_lm(x, y, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling regressions with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_lm(x, y, 252, weights, min_obs = 1)
+##' result <- roll_lm(x, y, 252, weights)
 ##' @export
 roll_lm <- function(x, y, width, weights = rep(1, width), intercept = TRUE, 
                     center = FALSE, center_x = center, center_y = center,
                     scale = FALSE, scale_x = scale, scale_y = scale,
                     min_obs = width, complete_obs = TRUE,
                     na_restore = FALSE, parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_lm', PACKAGE = 'roll',
+  return(.Call(roll_roll_lm,
                x,
                y,
                as.integer(width),
@@ -397,42 +499,40 @@ roll_lm <- function(x, y, width, weights = rep(1, width), intercept = TRUE,
 ##' if \code{FALSE} then zero is used.
 ##' @param scale logical. If \code{TRUE} then the weighted standard deviation of each variable is used,
 ##' if \code{FALSE} then no scaling is done.
-##' @param min_obs integer. Minimum number of observations required to have a value within a window, 
-##' otherwise result is NA.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then pairwise is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling eigenvalues and eigenvectors of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return A list containing the following components:
 ##' \item{values}{An object of the same class and dimension as \code{data} with the rolling eigenvalues.}
 ##' \item{vectors}{A cube with each slice the rolling eigenvectors.}
-##' @note If users are already taking advantage of parallelism using multithreaded BLAS/LAPACK
-##' libraries, then limit the number of cores in the RcppParallel package to one with the
-##' \code{\link[RcppParallel]{setThreadOptions}} function.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling eigenvalues and eigenvectors
+##' # Rolling eigenvalues and eigenvectors
 ##' result <- roll_eigen(data, 252)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_eigen(data, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_eigen(data, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling eigenvalues and eigenvectors with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_eigen(data, 252, weights, min_obs = 1)
+##' result <- roll_eigen(data, 252, weights)
 ##' @export
 roll_eigen <- function(data, width, weights = rep(1, width), center = TRUE, scale = FALSE,
                        min_obs = width, complete_obs = TRUE, na_restore = FALSE,
                        parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_eigen', PACKAGE = 'roll',
+  return(.Call(roll_roll_eigen,
                data,
                as.integer(width),
                as.numeric(weights),
@@ -465,47 +565,45 @@ roll_eigen <- function(data, width, weights = rep(1, width), center = TRUE, scal
 ##' @param scale_x logical. If \code{TRUE} then the weighted standard deviation of each \code{x} 
 ##' variable is used, if \code{FALSE} then no scaling is done.
 ##' @param scale_y logical. Analogous to \code{scale_x}.
-##' @param min_obs integer. Minimum number of observations required to have a value within a window, 
-##' otherwise result is NA.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then pairwise is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling principal component regressions of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return A list containing the following components:
 ##' \item{coefficients}{A list of objects with the rolling coefficients for each \code{y}.
 ##' An object is the same class and dimension (with an added column for the intercept) as \code{x}.}
 ##' \item{r.squared}{A list of objects with the rolling r-squareds for each \code{y}.
 ##' An object is the same class as \code{x}.}
-##' @note If users are already taking advantage of parallelism using multithreaded BLAS/LAPACK
-##' libraries, then limit the number of cores in the RcppParallel package to one with the
-##' \code{\link[RcppParallel]{setThreadOptions}} function.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' y <- matrix(rnorm(n_obs), nrow = n_obs, ncol = 1)
 ##' 
-##' # 252-day rolling principal component regression
+##' # Rolling principal component regressions
 ##' result <- roll_pcr(x, y, 252, comps = 1)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_pcr(x, y, 252, comps = 1, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_pcr(x, y, n_obs, comps = 1, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling principal component regressions with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_pcr(x, y, 252, comps = 1, weights, min_obs = 1)
+##' result <- roll_pcr(x, y, 252, comps = 1, weights)
 ##' @export
 roll_pcr <- function(x, y, width, comps = 1:ncol(x), weights = rep(1, width), intercept = TRUE, 
                      center = FALSE, center_x = center, center_y = center,
                      scale = FALSE, scale_x = scale, scale_y = scale,
                      min_obs = width, complete_obs = TRUE,
                      na_restore = FALSE, parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_pcr', PACKAGE = 'roll',
+  return(.Call(roll_roll_pcr,
                x,
                y,
                as.integer(width),
@@ -534,41 +632,39 @@ roll_pcr <- function(x, y, width, comps = 1:ncol(x), weights = rep(1, width), in
 ##' if \code{FALSE} then zero is used.
 ##' @param scale logical. If \code{TRUE} then the weighted standard deviation of each variable is used,
 ##' if \code{FALSE} then no scaling is done.
-##' @param min_obs integer. Minimum number of observations required to have a value within a window, 
-##' otherwise result is NA.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
 ##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
 ##' if \code{FALSE} then pairwise is used.
 ##' @param na_restore logical. Should missing values be restored?
 ##' @param parallel_for character. Executes a "for" loop in which iterations run in parallel by
 ##' \code{rows} or \code{cols}.
+##' @details The numerical calculations use RcppParallel to parallelize rolling variance inflation factors of time-series data. 
+##' RcppParallel provides a complete toolkit for creating safe, portable, high-performance parallel 
+##' algorithms, built on top of the Intel Threading Building Blocks (TBB) and TinyThread libraries.
+##' 
+##' By default, all the available cores on a machine are used for parallel algorithms. If users are 
+##' either already taking advantage of parallelism or instead want to use a fixed number or proportion of 
+##' threads, then set the number of threads in the RcppParallel package with the 
+##' \code{\link[RcppParallel]{setThreadOptions}} function.
 ##' @return An object of the same class and dimension as \code{data} with the rolling variance
 ##' inflation factors.
-##' @note If users are already taking advantage of parallelism using multithreaded BLAS/LAPACK
-##' libraries, then limit the number of cores in the RcppParallel package to one with the
-##' \code{\link[RcppParallel]{setThreadOptions}} function.
-##' @seealso \code{\link[RcppParallel]{setThreadOptions}} for thread options via RcppParallel.
 ##' @examples
 ##' n_vars <- 10
 ##' n_obs <- 1000
 ##' data <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
 ##' 
-##' # 252-day rolling variance inflation factors
+##' # Rolling variance inflation factors
 ##' result <- roll_vif(data, 252)
 ##' 
-##' # Equivalent to 'na.rm = TRUE'
-##' result <- roll_vif(data, 252, min_obs = 1)
-##' 
-##' # Expanding window
-##' result <- roll_vif(data, n_obs, min_obs = 1)
-##' 
-##' # Exponential decay
+##' # Rolling variance inflation factors with exponential decay
 ##' weights <- 0.9 ^ (251:0)
-##' result <- roll_vif(data, 252, weights, min_obs = 1)
+##' result <- roll_vif(data, 252, weights)
 ##' @export
 roll_vif <- function(data, width, weights = rep(1, width), center = FALSE, scale = FALSE,
                      min_obs = width, complete_obs = TRUE, na_restore = FALSE,
                      parallel_for = c("rows", "cols")) {
-  return(.Call('roll_roll_vif', PACKAGE = 'roll',
+  return(.Call(roll_roll_vif,
                data,
                as.integer(width),
                as.numeric(weights),

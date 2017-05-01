@@ -1,8 +1,8 @@
 Package: roll
 Type: Package
 Title: Rolling Statistics
-Version: 1.0.6
-Date: 2016-09-19
+Version: 1.0.7
+Date: 2017-05-01
 Author: Jason Foster
 Maintainer: Jason Foster <jason.j.foster@gmail.com>
 Description: Parallel functions for computing rolling statistics of time-series
@@ -13,8 +13,8 @@ BugReports: https://github.com/jjf234/roll/issues
 Imports: Rcpp, RcppParallel
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 SystemRequirements: GNU make, C++11
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 NeedsCompilation: yes
-Packaged: 2016-09-19 09:31:14 UTC; Jason
+Packaged: 2017-05-01 10:42:18 UTC; Jason
 Repository: CRAN
-Date/Publication: 2016-09-19 12:38:22
+Date/Publication: 2017-05-01 10:58:07 UTC
