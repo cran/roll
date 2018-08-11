@@ -1,10 +1,6 @@
 ## roll ![](https://api.travis-ci.org/jjf234/roll.png?branch=master) ![](http://www.r-pkg.org/badges/version/roll)
 
-roll is a package for R that provides parallel functions for computing rolling statistics of time-series data.
-
-### Examples
-
-"Multi-asset principal component regression using RcppParallel," R/Finance: Applied Finance with R, May 2016, Chicago, IL: [http://past.rinfinance.com/agenda/2016/talk/JasonFoster.pdf](http://past.rinfinance.com/agenda/2016/talk/JasonFoster.pdf)
+roll is a package for R that provides fast and efficient computation of rolling statistics for time-series data.
 
 ### Installation
 
