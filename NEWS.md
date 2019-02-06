@@ -1,8 +1,13 @@
 ## News for package 'roll'
 
+### Changes in roll version 1.1.2 (2019-02-06)
+
+* New `roll_median`, `roll_min`, `roll_max`, `roll_any`, and `roll_all` functions for computing rolling medians, minimums, maximums, any, and all, respectively, of time-series data ([#4](https://github.com/jjf234/roll/issues/4), [#13](https://github.com/jjf234/roll/issues/13), [#14](https://github.com/jjf234/roll/issues/14))
+    * Note: `roll_median`, `roll_min`, and `roll_max` functions are not calculated using online algorithms
+
 ### Changes in roll version 1.1.1 (2018-08-11)
 
-* Added `online` argument to process observations using an online algorithm by default
+* Added `online` argument to process observations using online algorithms by default
 
 * `roll_lm` function now returns standard errors ([#7](https://github.com/jjf234/roll/issues/7))
 

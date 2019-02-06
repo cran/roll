@@ -6,6 +6,38 @@
 
 using namespace Rcpp;
 
+// roll_any
+LogicalMatrix roll_any(const LogicalMatrix& x, const int& width, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+RcppExport SEXP _roll_roll_any(SEXP xSEXP, SEXP widthSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const LogicalMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
+    Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type na_restore(na_restoreSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type online(onlineSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_any(x, width, min_obs, complete_obs, na_restore, online));
+    return rcpp_result_gen;
+END_RCPP
+}
+// roll_all
+LogicalMatrix roll_all(const LogicalMatrix& x, const int& width, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+RcppExport SEXP _roll_roll_all(SEXP xSEXP, SEXP widthSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const LogicalMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
+    Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type na_restore(na_restoreSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type online(onlineSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_all(x, width, min_obs, complete_obs, na_restore, online));
+    return rcpp_result_gen;
+END_RCPP
+}
 // roll_sum
 NumericMatrix roll_sum(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_sum(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
@@ -54,6 +86,57 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool& >::type na_restore(na_restoreSEXP);
     Rcpp::traits::input_parameter< const bool& >::type online(onlineSEXP);
     rcpp_result_gen = Rcpp::wrap(roll_mean(x, width, weights, min_obs, complete_obs, na_restore, online));
+    return rcpp_result_gen;
+END_RCPP
+}
+// roll_min
+NumericMatrix roll_min(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+RcppExport SEXP _roll_roll_min(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type na_restore(na_restoreSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type online(onlineSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_min(x, width, weights, min_obs, complete_obs, na_restore, online));
+    return rcpp_result_gen;
+END_RCPP
+}
+// roll_max
+NumericMatrix roll_max(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+RcppExport SEXP _roll_roll_max(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type na_restore(na_restoreSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type online(onlineSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_max(x, width, weights, min_obs, complete_obs, na_restore, online));
+    return rcpp_result_gen;
+END_RCPP
+}
+// roll_median
+NumericMatrix roll_median(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+RcppExport SEXP _roll_roll_median(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type na_restore(na_restoreSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type online(onlineSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_median(x, width, weights, min_obs, complete_obs, na_restore, online));
     return rcpp_result_gen;
 END_RCPP
 }
