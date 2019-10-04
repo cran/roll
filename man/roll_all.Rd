@@ -8,7 +8,7 @@ roll_all(x, width, min_obs = width, complete_obs = FALSE,
   na_restore = FALSE, online = TRUE)
 }
 \arguments{
-\item{x}{logical matrix or xts object. Rows are observations and columns are variables.}
+\item{x}{logical vector or matrix. Rows are observations and columns are variables.}
 
 \item{width}{integer. Window size.}
 
@@ -26,7 +26,7 @@ if \code{FALSE} then each value is used.}
 An object of the same class and dimension as \code{x} with the rolling all.
 }
 \description{
-A function for computing rolling all of time-series data.
+A function for computing the rolling all of time-series data.
 }
 \examples{
 n_vars <- 3

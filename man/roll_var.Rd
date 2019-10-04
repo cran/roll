@@ -9,7 +9,7 @@ roll_var(x, width, weights = rep(1, width), center = TRUE,
   online = TRUE)
 }
 \arguments{
-\item{x}{matrix or xts object. Rows are observations and columns are variables.}
+\item{x}{vector or matrix. Rows are observations and columns are variables.}
 
 \item{width}{integer. Window size.}
 
@@ -32,7 +32,7 @@ if \code{FALSE} then each value is used.}
 An object of the same class and dimension as \code{x} with the rolling variances.
 }
 \description{
-A function for computing rolling variances of time-series data.
+A function for computing the rolling variances of time-series data.
 }
 \details{
 The denominator used gives an unbiased estimate of the variance, so if the weights are the 

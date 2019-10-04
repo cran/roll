@@ -5,10 +5,10 @@
 \title{Rolling Maximums}
 \usage{
 roll_max(x, width, weights = rep(1, width), min_obs = width,
-  complete_obs = FALSE, na_restore = FALSE, online = FALSE)
+  complete_obs = FALSE, na_restore = FALSE, online = TRUE)
 }
 \arguments{
-\item{x}{matrix or xts object. Rows are observations and columns are variables.}
+\item{x}{vector or matrix. Rows are observations and columns are variables.}
 
 \item{width}{integer. Window size.}
 
@@ -28,7 +28,7 @@ if \code{FALSE} then each value is used.}
 An object of the same class and dimension as \code{x} with the rolling maximums.
 }
 \description{
-A function for computing rolling maximums of time-series data.
+A function for computing the rolling maximums of time-series data.
 }
 \examples{
 n_vars <- 3

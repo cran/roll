@@ -9,7 +9,7 @@ roll_sd(x, width, weights = rep(1, width), center = TRUE,
   online = TRUE)
 }
 \arguments{
-\item{x}{matrix or xts object. Rows are observations and columns are variables.}
+\item{x}{vector or matrix. Rows are observations and columns are variables.}
 
 \item{width}{integer. Window size.}
 
@@ -32,7 +32,7 @@ if \code{FALSE} then each value is used.}
 An object of the same class and dimension as \code{x} with the rolling standard deviations.
 }
 \description{
-A function for computing rolling standard deviations of time-series data.
+A function for computing the rolling standard deviations of time-series data.
 }
 \details{
 The denominator used gives an unbiased estimate of the standard deviation, so if the weights are the 

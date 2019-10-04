@@ -1,8 +1,8 @@
 ##' Rolling Any
 ##'
-##' A function for computing rolling any of time-series data.
+##' A function for computing the rolling any of time-series data.
 ##'
-##' @param x logical matrix or xts object. Rows are observations and columns are variables.
+##' @param x logical vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
 ##' otherwise result is \code{NA}.
@@ -35,9 +35,9 @@ roll_any <- function(x, width, min_obs = width,
 
 ##' Rolling All
 ##'
-##' A function for computing rolling all of time-series data.
+##' A function for computing the rolling all of time-series data.
 ##'
-##' @param x logical matrix or xts object. Rows are observations and columns are variables.
+##' @param x logical vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
 ##' otherwise result is \code{NA}.
@@ -70,9 +70,9 @@ roll_all <- function(x, width, min_obs = width,
 
 ##' Rolling Sums
 ##'
-##' A function for computing rolling sums of time-series data.
+##' A function for computing the rolling sums of time-series data.
 ##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
@@ -110,9 +110,9 @@ roll_sum <- function(x, width, weights = rep(1, width),
 
 ##' Rolling Products
 ##'
-##' A function for computing rolling products of time-series data.
+##' A function for computing the rolling products of time-series data.
 ##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
@@ -150,9 +150,9 @@ roll_prod <- function(x, width, weights = rep(1, width),
 
 ##' Rolling Means
 ##'
-##' A function for computing rolling means of time-series data.
+##' A function for computing the rolling means of time-series data.
 ##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
@@ -188,11 +188,171 @@ roll_mean <- function(x, width, weights = rep(1, width),
   ))
 }
 
+##' Rolling Minimums
+##'
+##' A function for computing the rolling minimums of time-series data.
+##'
+##' @param x vector or matrix. Rows are observations and columns are variables.
+##' @param width integer. Window size.
+##' @param weights vector. Weights for each observation within a window.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
+##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
+##' if \code{FALSE} then each value is used.
+##' @param na_restore logical. Should missing values be restored?
+##' @param online logical. Process observations using an online algorithm.
+##' @return An object of the same class and dimension as \code{x} with the rolling minimums.
+##' @examples
+##' n_vars <- 3
+##' n_obs <- 15
+##' x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
+##' 
+##' # rolling minimums
+##' result <- roll_min(x, 5)
+##' 
+##' # rolling minimums with exponential decay
+##' weights <- 0.9 ^ (5:1)
+##' result <- roll_min(x, 5, weights)
+##' @export
+roll_min <- function(x, width, weights = rep(1, width),
+                     min_obs = width, complete_obs = FALSE, na_restore = FALSE,
+                     online = TRUE) {
+  return(.Call(`_roll_roll_min`,
+               x,
+               as.integer(width),
+               as.numeric(weights),
+               as.integer(min_obs),
+               as.logical(complete_obs),
+               as.logical(na_restore),
+               as.logical(online)
+  ))
+}
+
+##' Rolling Maximums
+##'
+##' A function for computing the rolling maximums of time-series data.
+##'
+##' @param x vector or matrix. Rows are observations and columns are variables.
+##' @param width integer. Window size.
+##' @param weights vector. Weights for each observation within a window.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
+##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
+##' if \code{FALSE} then each value is used.
+##' @param na_restore logical. Should missing values be restored?
+##' @param online logical. Process observations using an online algorithm.
+##' @return An object of the same class and dimension as \code{x} with the rolling maximums.
+##' @examples
+##' n_vars <- 3
+##' n_obs <- 15
+##' x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
+##' 
+##' # rolling maximums
+##' result <- roll_max(x, 5)
+##' 
+##' # rolling maximums with exponential decay
+##' weights <- 0.9 ^ (5:1)
+##' result <- roll_max(x, 5, weights)
+##' @export
+roll_max <- function(x, width, weights = rep(1, width),
+                     min_obs = width, complete_obs = FALSE, na_restore = FALSE,
+                     online = TRUE) {
+  return(.Call(`_roll_roll_max`,
+               x,
+               as.integer(width),
+               as.numeric(weights),
+               as.integer(min_obs),
+               as.logical(complete_obs),
+               as.logical(na_restore),
+               as.logical(online)
+  ))
+}
+
+##' Rolling Index of Minimums
+##'
+##' A function for computing the rolling index of minimums of time-series data.
+##'
+##' @param x vector or matrix. Rows are observations and columns are variables.
+##' @param width integer. Window size.
+##' @param weights vector. Weights for each observation within a window.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
+##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
+##' if \code{FALSE} then each value is used.
+##' @param na_restore logical. Should missing values be restored?
+##' @param online logical. Process observations using an online algorithm.
+##' @return An object of the same class and dimension as \code{x} with the rolling index of minimums.
+##' @examples
+##' n_vars <- 3
+##' n_obs <- 15
+##' x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
+##' 
+##' # rolling index of minimums
+##' result <- roll_idxmin(x, 5)
+##' 
+##' # rolling index of minimums with exponential decay
+##' weights <- 0.9 ^ (5:1)
+##' result <- roll_idxmin(x, 5, weights)
+##' @export
+roll_idxmin <- function(x, width, weights = rep(1, width),
+                     min_obs = width, complete_obs = FALSE, na_restore = FALSE,
+                     online = TRUE) {
+  return(.Call(`_roll_roll_idxmin`,
+               x,
+               as.integer(width),
+               as.numeric(weights),
+               as.integer(min_obs),
+               as.logical(complete_obs),
+               as.logical(na_restore),
+               as.logical(online)
+  ))
+}
+
+##' Rolling Index of Maximums
+##'
+##' A function for computing the rolling index of maximums of time-series data.
+##'
+##' @param x vector or matrix. Rows are observations and columns are variables.
+##' @param width integer. Window size.
+##' @param weights vector. Weights for each observation within a window.
+##' @param min_obs integer. Minimum number of observations required to have a value within a window,
+##' otherwise result is \code{NA}.
+##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
+##' if \code{FALSE} then each value is used.
+##' @param na_restore logical. Should missing values be restored?
+##' @param online logical. Process observations using an online algorithm.
+##' @return An object of the same class and dimension as \code{x} with the rolling index of maximums.
+##' @examples
+##' n_vars <- 3
+##' n_obs <- 15
+##' x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
+##' 
+##' # rolling index of maximums
+##' result <- roll_idxmax(x, 5)
+##' 
+##' # rolling index of maximums with exponential decay
+##' weights <- 0.9 ^ (5:1)
+##' result <- roll_idxmax(x, 5, weights)
+##' @export
+roll_idxmax <- function(x, width, weights = rep(1, width),
+                        min_obs = width, complete_obs = FALSE, na_restore = FALSE,
+                        online = TRUE) {
+  return(.Call(`_roll_roll_idxmax`,
+               x,
+               as.integer(width),
+               as.numeric(weights),
+               as.integer(min_obs),
+               as.logical(complete_obs),
+               as.logical(na_restore),
+               as.logical(online)
+  ))
+}
+
 ##' Rolling Medians
 ##'
-##' A function for computing rolling medians of time-series data.
+##' A function for computing the rolling medians of time-series data.
 ##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param min_obs integer. Minimum number of observations required to have a value within a window,
@@ -228,91 +388,11 @@ roll_median <- function(x, width, weights = rep(1, width),
   ))
 }
 
-##' Rolling Maximums
-##'
-##' A function for computing rolling maximums of time-series data.
-##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
-##' @param width integer. Window size.
-##' @param weights vector. Weights for each observation within a window.
-##' @param min_obs integer. Minimum number of observations required to have a value within a window,
-##' otherwise result is \code{NA}.
-##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
-##' if \code{FALSE} then each value is used.
-##' @param na_restore logical. Should missing values be restored?
-##' @param online logical. Process observations using an online algorithm.
-##' @return An object of the same class and dimension as \code{x} with the rolling maximums.
-##' @examples
-##' n_vars <- 3
-##' n_obs <- 15
-##' x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
-##' 
-##' # rolling maximums
-##' result <- roll_max(x, 5)
-##' 
-##' # rolling maximums with exponential decay
-##' weights <- 0.9 ^ (5:1)
-##' result <- roll_max(x, 5, weights)
-##' @export
-roll_max <- function(x, width, weights = rep(1, width),
-                     min_obs = width, complete_obs = FALSE, na_restore = FALSE,
-                     online = FALSE) {
-  return(.Call(`_roll_roll_max`,
-               x,
-               as.integer(width),
-               as.numeric(weights),
-               as.integer(min_obs),
-               as.logical(complete_obs),
-               as.logical(na_restore),
-               as.logical(online)
-  ))
-}
-
-##' Rolling Minimums
-##'
-##' A function for computing rolling minimums of time-series data.
-##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
-##' @param width integer. Window size.
-##' @param weights vector. Weights for each observation within a window.
-##' @param min_obs integer. Minimum number of observations required to have a value within a window,
-##' otherwise result is \code{NA}.
-##' @param complete_obs	logical. If \code{TRUE} then rows containing any missing values are removed,
-##' if \code{FALSE} then each value is used.
-##' @param na_restore logical. Should missing values be restored?
-##' @param online logical. Process observations using an online algorithm.
-##' @return An object of the same class and dimension as \code{x} with the rolling minimums.
-##' @examples
-##' n_vars <- 3
-##' n_obs <- 15
-##' x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
-##' 
-##' # rolling minimums
-##' result <- roll_min(x, 5)
-##' 
-##' # rolling minimums with exponential decay
-##' weights <- 0.9 ^ (5:1)
-##' result <- roll_min(x, 5, weights)
-##' @export
-roll_min <- function(x, width, weights = rep(1, width),
-                     min_obs = width, complete_obs = FALSE, na_restore = FALSE,
-                     online = FALSE) {
-  return(.Call(`_roll_roll_min`,
-               x,
-               as.integer(width),
-               as.numeric(weights),
-               as.integer(min_obs),
-               as.logical(complete_obs),
-               as.logical(na_restore),
-               as.logical(online)
-  ))
-}
-
 ##' Rolling Variances
 ##'
-##' A function for computing rolling variances of time-series data.
+##' A function for computing the rolling variances of time-series data.
 ##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
@@ -355,9 +435,9 @@ roll_var <- function(x, width, weights = rep(1, width), center = TRUE,
 
 ##' Rolling Standard Deviations
 ##'
-##' A function for computing rolling standard deviations of time-series data.
+##' A function for computing the rolling standard deviations of time-series data.
 ##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
@@ -400,9 +480,9 @@ roll_sd <- function(x, width, weights = rep(1, width), center = TRUE,
 
 ##' Rolling Scaling and Centering
 ##'
-##' A function for computing rolling scaling and centering of time-series data.
+##' A function for computing the rolling scaling and centering of time-series data.
 ##'
-##' @param x matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
@@ -454,10 +534,10 @@ roll_scale <- function(x, width, weights = rep(1, width), center = TRUE, scale =
 
 ##' Rolling Covariance Matrices
 ##'
-##' A function for computing rolling covariance matrices of time-series data.
+##' A function for computing the rolling covariance matrices of time-series data.
 ##' 
-##' @param x matrix or xts object. Rows are observations and columns are variables.
-##' @param y matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
+##' @param y vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
@@ -503,10 +583,10 @@ roll_cov <- function(x, y = NULL, width, weights = rep(1, width), center = TRUE,
 
 ##' Rolling Correlation Matrices
 ##'
-##' A function for computing rolling correlation matrices of time-series data.
+##' A function for computing the rolling correlation matrices of time-series data.
 ##' 
-##' @param x matrix or xts object. Rows are observations and columns are variables.
-##' @param y matrix or xts object. Rows are observations and columns are variables.
+##' @param x vector or matrix. Rows are observations and columns are variables.
+##' @param y vector or matrix. Rows are observations and columns are variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param center logical. If \code{TRUE} then the weighted mean of each variable is used,
@@ -552,10 +632,10 @@ roll_cor <- function(x, y = NULL, width, weights = rep(1, width), center = TRUE,
 
 ##' Rolling Linear Models
 ##'
-##' A function for computing rolling linear models of time-series data.
+##' A function for computing the rolling linear models of time-series data.
 ##' 
-##' @param x matrix or xts object. Rows are observations and columns are the independent variables.
-##' @param y matrix or xts object. Rows are observations and columns are the dependent variables.
+##' @param x vector or matrix. Rows are observations and columns are the independent variables.
+##' @param y vector or matrix. Rows are observations and columns are the dependent variables.
 ##' @param width integer. Window size.
 ##' @param weights vector. Weights for each observation within a window.
 ##' @param intercept logical. Either \code{TRUE} to include or \code{FALSE} to remove the intercept.

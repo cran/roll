@@ -7,12 +7,12 @@
 using namespace Rcpp;
 
 // roll_any
-LogicalMatrix roll_any(const LogicalMatrix& x, const int& width, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_any(const SEXP& x, const int& width, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_any(SEXP xSEXP, SEXP widthSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const LogicalMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
     Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
@@ -23,12 +23,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_all
-LogicalMatrix roll_all(const LogicalMatrix& x, const int& width, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_all(const SEXP& x, const int& width, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_all(SEXP xSEXP, SEXP widthSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const LogicalMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
     Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
@@ -39,12 +39,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_sum
-NumericMatrix roll_sum(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_sum(const SEXP& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_sum(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
@@ -56,12 +56,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_prod
-NumericMatrix roll_prod(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_prod(const SEXP& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_prod(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
@@ -73,12 +73,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_mean
-NumericMatrix roll_mean(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_mean(const SEXP& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_mean(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
@@ -90,12 +90,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_min
-NumericMatrix roll_min(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_min(const SEXP& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_min(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
@@ -107,12 +107,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_max
-NumericMatrix roll_max(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_max(const SEXP& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_max(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
@@ -123,13 +123,47 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// roll_idxmin
+SEXP roll_idxmin(const SEXP& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+RcppExport SEXP _roll_roll_idxmin(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type na_restore(na_restoreSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type online(onlineSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_idxmin(x, width, weights, min_obs, complete_obs, na_restore, online));
+    return rcpp_result_gen;
+END_RCPP
+}
+// roll_idxmax
+SEXP roll_idxmax(const SEXP& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+RcppExport SEXP _roll_roll_idxmax(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type complete_obs(complete_obsSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type na_restore(na_restoreSEXP);
+    Rcpp::traits::input_parameter< const bool& >::type online(onlineSEXP);
+    rcpp_result_gen = Rcpp::wrap(roll_idxmax(x, width, weights, min_obs, complete_obs, na_restore, online));
+    return rcpp_result_gen;
+END_RCPP
+}
 // roll_median
-NumericMatrix roll_median(const NumericMatrix& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_median(const SEXP& x, const int& width, const arma::vec& weights, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_median(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const int& >::type min_obs(min_obsSEXP);
@@ -141,12 +175,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_var
-NumericMatrix roll_var(const NumericMatrix& x, const int& width, const arma::vec& weights, const bool& center, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_var(const SEXP& x, const int& width, const arma::vec& weights, const bool& center, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_var(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP centerSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const bool& >::type center(centerSEXP);
@@ -159,12 +193,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_sd
-NumericMatrix roll_sd(const NumericMatrix& x, const int& width, const arma::vec& weights, const bool& center, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_sd(const SEXP& x, const int& width, const arma::vec& weights, const bool& center, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_sd(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP centerSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const bool& >::type center(centerSEXP);
@@ -177,12 +211,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_scale
-NumericMatrix roll_scale(const NumericMatrix& x, const int& width, const arma::vec& weights, const bool& center, const bool& scale, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_scale(const SEXP& x, const int& width, const arma::vec& weights, const bool& center, const bool& scale, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_scale(SEXP xSEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP centerSEXP, SEXP scaleSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const bool& >::type center(centerSEXP);
@@ -196,13 +230,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_cov
-NumericVector roll_cov(const NumericMatrix& x, const Nullable<NumericMatrix>& y, const int& width, const arma::vec& weights, const bool& center, const bool& scale, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+SEXP roll_cov(const SEXP& x, const SEXP& y, const int& width, const arma::vec& weights, const bool& center, const bool& scale, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_cov(SEXP xSEXP, SEXP ySEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP centerSEXP, SEXP scaleSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const Nullable<NumericMatrix>& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const bool& >::type center(centerSEXP);
@@ -216,13 +250,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // roll_lm
-List roll_lm(const NumericMatrix& x, const NumericMatrix& y, const int& width, const arma::vec& weights, const bool& intercept, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
+List roll_lm(const SEXP& x, const SEXP& y, const int& width, const arma::vec& weights, const bool& intercept, const int& min_obs, const bool& complete_obs, const bool& na_restore, const bool& online);
 RcppExport SEXP _roll_roll_lm(SEXP xSEXP, SEXP ySEXP, SEXP widthSEXP, SEXP weightsSEXP, SEXP interceptSEXP, SEXP min_obsSEXP, SEXP complete_obsSEXP, SEXP na_restoreSEXP, SEXP onlineSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const int& >::type width(widthSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< const bool& >::type intercept(interceptSEXP);

@@ -9,9 +9,9 @@ roll_cor(x, y = NULL, width, weights = rep(1, width), center = TRUE,
   na_restore = FALSE, online = TRUE)
 }
 \arguments{
-\item{x}{matrix or xts object. Rows are observations and columns are variables.}
+\item{x}{vector or matrix. Rows are observations and columns are variables.}
 
-\item{y}{matrix or xts object. Rows are observations and columns are variables.}
+\item{y}{vector or matrix. Rows are observations and columns are variables.}
 
 \item{width}{integer. Window size.}
 
@@ -37,7 +37,7 @@ if \code{FALSE} then pairwise is used.}
 A cube with each slice the rolling correlation matrix.
 }
 \description{
-A function for computing rolling correlation matrices of time-series data.
+A function for computing the rolling correlation matrices of time-series data.
 }
 \details{
 The denominator used gives an unbiased estimate of the covariance, so if the weights are the 
