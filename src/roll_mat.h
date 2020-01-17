@@ -132,8 +132,8 @@ struct RollAnyOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollAnyBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollAnyOfflineMat : public Worker {
   
   const RMatrix<int> x;         // source
   const int n_rows_x;
@@ -145,10 +145,10 @@ struct RollAnyBatchMat : public Worker {
   RMatrix<int> rcpp_any;        // destination (pass by reference)
   
   // initialize with source and destination
-  RollAnyBatchMat(const IntegerMatrix x, const int n_rows_x,
-                  const int n_cols_x, const int width,
-                  const int min_obs, const IntegerVector rcpp_any_na,
-                  const bool na_restore, IntegerMatrix rcpp_any)
+  RollAnyOfflineMat(const IntegerMatrix x, const int n_rows_x,
+                    const int n_cols_x, const int width,
+                    const int min_obs, const IntegerVector rcpp_any_na,
+                    const bool na_restore, IntegerMatrix rcpp_any)
     : x(x), n_rows_x(n_rows_x),
       n_cols_x(n_cols_x), width(width),
       min_obs(min_obs), rcpp_any_na(rcpp_any_na),
@@ -338,8 +338,8 @@ struct RollAllOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollAllBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollAllOfflineMat : public Worker {
   
   const RMatrix<int> x;         // source
   const int n_rows_x;
@@ -351,10 +351,10 @@ struct RollAllBatchMat : public Worker {
   RMatrix<int> rcpp_all;        // destination (pass by reference)
   
   // initialize with source and destination
-  RollAllBatchMat(const IntegerMatrix x, const int n_rows_x,
-                  const int n_cols_x, const int width,
-                  const int min_obs, const IntegerVector rcpp_any_na,
-                  const bool na_restore, IntegerMatrix rcpp_all)
+  RollAllOfflineMat(const IntegerMatrix x, const int n_rows_x,
+                    const int n_cols_x, const int width,
+                    const int min_obs, const IntegerVector rcpp_any_na,
+                    const bool na_restore, IntegerMatrix rcpp_all)
     : x(x), n_rows_x(n_rows_x),
       n_cols_x(n_cols_x), width(width),
       min_obs(min_obs), rcpp_any_na(rcpp_any_na),
@@ -557,8 +557,8 @@ struct RollSumOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollSumBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollSumOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -572,11 +572,11 @@ struct RollSumBatchMat : public Worker {
   arma::mat& arma_sum;          // destination (pass by reference)
   
   // initialize with source and destination
-  RollSumBatchMat(const NumericMatrix x, const int n,
-                  const int n_rows_x, const int n_cols_x,
-                  const int width, const arma::vec arma_weights,
-                  const int min_obs, const arma::uvec arma_any_na,
-                  const bool na_restore, arma::mat& arma_sum)
+  RollSumOfflineMat(const NumericMatrix x, const int n,
+                    const int n_rows_x, const int n_cols_x,
+                    const int width, const arma::vec arma_weights,
+                    const int min_obs, const arma::uvec arma_any_na,
+                    const bool na_restore, arma::mat& arma_sum)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -801,8 +801,8 @@ struct RollProdOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollProdBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollProdOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -816,11 +816,11 @@ struct RollProdBatchMat : public Worker {
   arma::mat& arma_prod;         // destination (pass by reference)
   
   // initialize with source and destination
-  RollProdBatchMat(const NumericMatrix x, const int n,
-                   const int n_rows_x, const int n_cols_x,
-                   const int width, const arma::vec arma_weights,
-                   const int min_obs, const arma::uvec arma_any_na,
-                   const bool na_restore, arma::mat& arma_prod)
+  RollProdOfflineMat(const NumericMatrix x, const int n,
+                     const int n_rows_x, const int n_cols_x,
+                     const int width, const arma::vec arma_weights,
+                     const int min_obs, const arma::uvec arma_any_na,
+                     const bool na_restore, arma::mat& arma_prod)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -1026,8 +1026,8 @@ struct RollMeanOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollMeanBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollMeanOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -1041,11 +1041,11 @@ struct RollMeanBatchMat : public Worker {
   arma::mat& arma_mean;         // destination (pass by reference)
   
   // initialize with source and destination
-  RollMeanBatchMat(const NumericMatrix x, const int n,
-                   const int n_rows_x, const int n_cols_x,
-                   const int width, const arma::vec arma_weights,
-                   const int min_obs, const arma::uvec arma_any_na,
-                   const bool na_restore, arma::mat& arma_mean)
+  RollMeanOfflineMat(const NumericMatrix x, const int n,
+                     const int n_rows_x, const int n_cols_x,
+                     const int width, const arma::vec arma_weights,
+                     const int min_obs, const arma::uvec arma_any_na,
+                     const bool na_restore, arma::mat& arma_mean)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -1236,8 +1236,8 @@ struct RollMinOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollMinBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollMinOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -1251,11 +1251,11 @@ struct RollMinBatchMat : public Worker {
   arma::mat& arma_min;          // destination (pass by reference)
   
   // initialize with source and destination
-  RollMinBatchMat(const NumericMatrix x, const int n,
-                  const int n_rows_x, const int n_cols_x,
-                  const int width, const arma::vec arma_weights,
-                  const int min_obs, const arma::uvec arma_any_na,
-                  const bool na_restore, arma::mat& arma_min)
+  RollMinOfflineMat(const NumericMatrix x, const int n,
+                    const int n_rows_x, const int n_cols_x,
+                    const int width, const arma::vec arma_weights,
+                    const int min_obs, const arma::uvec arma_any_na,
+                    const bool na_restore, arma::mat& arma_min)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -1451,8 +1451,8 @@ struct RollMaxOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollMaxBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollMaxOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -1466,11 +1466,11 @@ struct RollMaxBatchMat : public Worker {
   arma::mat& arma_max;          // destination (pass by reference)
   
   // initialize with source and destination
-  RollMaxBatchMat(const NumericMatrix x, const int n,
-                  const int n_rows_x, const int n_cols_x,
-                  const int width, const arma::vec arma_weights,
-                  const int min_obs, const arma::uvec arma_any_na,
-                  const bool na_restore, arma::mat& arma_max)
+  RollMaxOfflineMat(const NumericMatrix x, const int n,
+                    const int n_rows_x, const int n_cols_x,
+                    const int width, const arma::vec arma_weights,
+                    const int min_obs, const arma::uvec arma_any_na,
+                    const bool na_restore, arma::mat& arma_max)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -1649,7 +1649,7 @@ struct RollIdxMinOnlineMat : public Worker {
           if (n_obs >= min_obs) {
             rcpp_idxmin(i, j) = idxmin_x;
           } else {
-            rcpp_idxmin(i, j) = NA_REAL;
+            rcpp_idxmin(i, j) = NA_INTEGER;
           }
           
         } else {
@@ -1666,8 +1666,8 @@ struct RollIdxMinOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollIdxMinBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollIdxMinOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -1681,11 +1681,11 @@ struct RollIdxMinBatchMat : public Worker {
   RMatrix<int> rcpp_idxmin;     // destination (pass by reference)
   
   // initialize with source and destination
-  RollIdxMinBatchMat(const NumericMatrix x, const int n,
-                     const int n_rows_x, const int n_cols_x,
-                     const int width, const arma::vec arma_weights,
-                     const int min_obs, const IntegerVector rcpp_any_na,
-                     const bool na_restore, IntegerMatrix rcpp_idxmin)
+  RollIdxMinOfflineMat(const NumericMatrix x, const int n,
+                       const int n_rows_x, const int n_cols_x,
+                       const int width, const arma::vec arma_weights,
+                       const int min_obs, const IntegerVector rcpp_any_na,
+                       const bool na_restore, IntegerMatrix rcpp_idxmin)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -1741,7 +1741,7 @@ struct RollIdxMinBatchMat : public Worker {
           }
           
         } else {
-          rcpp_idxmin(i, j) = NA_REAL;
+          rcpp_idxmin(i, j) = NA_INTEGER;
         }
         
       } else {
@@ -1870,7 +1870,7 @@ struct RollIdxMaxOnlineMat : public Worker {
           if (n_obs >= min_obs) {
             rcpp_idxmax(i, j) = idxmax_x;
           } else {
-            rcpp_idxmax(i, j) = NA_REAL;
+            rcpp_idxmax(i, j) = NA_INTEGER;
           }
           
         } else {
@@ -1887,8 +1887,8 @@ struct RollIdxMaxOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollIdxMaxBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollIdxMaxOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -1902,11 +1902,11 @@ struct RollIdxMaxBatchMat : public Worker {
   RMatrix<int> rcpp_idxmax;     // destination (pass by reference)
   
   // initialize with source and destination
-  RollIdxMaxBatchMat(const NumericMatrix x, const int n,
-                     const int n_rows_x, const int n_cols_x,
-                     const int width, const arma::vec arma_weights,
-                     const int min_obs, const IntegerVector rcpp_any_na,
-                     const bool na_restore, IntegerMatrix rcpp_idxmax)
+  RollIdxMaxOfflineMat(const NumericMatrix x, const int n,
+                       const int n_rows_x, const int n_cols_x,
+                       const int width, const arma::vec arma_weights,
+                       const int min_obs, const IntegerVector rcpp_any_na,
+                       const bool na_restore, IntegerMatrix rcpp_idxmax)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -1962,7 +1962,7 @@ struct RollIdxMaxBatchMat : public Worker {
           }
           
         } else {
-          rcpp_idxmax(i, j) = NA_REAL;
+          rcpp_idxmax(i, j) = NA_INTEGER;
         }
         
       } else {
@@ -1977,8 +1977,8 @@ struct RollIdxMaxBatchMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollMedianBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollMedianOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -1992,11 +1992,11 @@ struct RollMedianBatchMat : public Worker {
   arma::mat& arma_median;       // destination (pass by reference)
   
   // initialize with source and destination
-  RollMedianBatchMat(const NumericMatrix x, const int n,
-                     const int n_rows_x, const int n_cols_x,
-                     const int width, const arma::vec arma_weights,
-                     const int min_obs, const arma::uvec arma_any_na,
-                     const bool na_restore, arma::mat& arma_median)
+  RollMedianOfflineMat(const NumericMatrix x, const int n,
+                       const int n_rows_x, const int n_cols_x,
+                       const int width, const arma::vec arma_weights,
+                       const int min_obs, const arma::uvec arma_any_na,
+                       const bool na_restore, arma::mat& arma_median)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -2300,13 +2300,7 @@ struct RollVarOnlineMat : public Worker {
         if ((!na_restore) || (na_restore && !std::isnan(x(i, j)))) {
           
           if ((n_obs > 1) && (n_obs >= min_obs)) {
-            
-            if (std::abs(sumsq_x) <= sqrt(arma::datum::eps)) {
-              arma_var(i, j) = 0;
-            } else {
-              arma_var(i, j) = sumsq_x / (sum_w - sumsq_w / sum_w);
-            }
-            
+            arma_var(i, j) = sumsq_x / (sum_w - sumsq_w / sum_w);
           } else {
             arma_var(i, j) = NA_REAL;
           }
@@ -2324,8 +2318,8 @@ struct RollVarOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollVarBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollVarOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -2340,12 +2334,12 @@ struct RollVarBatchMat : public Worker {
   arma::mat& arma_var;          // destination (pass by reference)
   
   // initialize with source and destination
-  RollVarBatchMat(const NumericMatrix x, const int n,
-                  const int n_rows_x, const int n_cols_x,
-                  const int width, const arma::vec arma_weights,
-                  const bool center, const int min_obs,
-                  const arma::uvec arma_any_na, const bool na_restore,
-                  arma::mat& arma_var)
+  RollVarOfflineMat(const NumericMatrix x, const int n,
+                    const int n_rows_x, const int n_cols_x,
+                    const int width, const arma::vec arma_weights,
+                    const bool center, const int min_obs,
+                    const arma::uvec arma_any_na, const bool na_restore,
+                    arma::mat& arma_var)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -2430,13 +2424,7 @@ struct RollVarBatchMat : public Worker {
         }
         
         if ((n_obs > 1) && (n_obs >= min_obs)) {
-          
-          if (std::abs(sumsq_x) <= sqrt(arma::datum::eps)) {
-            arma_var(i, j) = 0;
-          } else {
-            arma_var(i, j) = sumsq_x / (sum_w - sumsq_w / sum_w);
-          }
-          
+          arma_var(i, j) = sumsq_x / (sum_w - sumsq_w / sum_w);
         } else {
           arma_var(i, j) = NA_REAL;
         }
@@ -2498,6 +2486,7 @@ struct RollSdOnlineMat : public Worker {
       long double sumsq_x = 0;
       long double mean_prev_x = 0;
       long double mean_x = 0;
+      long double var_x = 0;
       
       if (width > 1) {
         lambda = arma_weights[n - 2] / arma_weights[n - 1]; // check already passed
@@ -2556,6 +2545,8 @@ struct RollSdOnlineMat : public Worker {
             sumsq_x = w_new * pow(x_new, (long double)2.0);
             
           }
+          
+          var_x = sumsq_x / (sum_w - sumsq_w / sum_w);
           
         }
         
@@ -2628,6 +2619,8 @@ struct RollSdOnlineMat : public Worker {
             
           }
           
+          var_x = sumsq_x / (sum_w - sumsq_w / sum_w);
+          
         }
         
         // don't compute if missing value and 'na_restore' argument is TRUE
@@ -2635,10 +2628,10 @@ struct RollSdOnlineMat : public Worker {
           
           if ((n_obs > 1) && (n_obs >= min_obs)) {
             
-            if (std::abs(sumsq_x) <= sqrt(arma::datum::eps)) {
+            if ((var_x < 0) || (sqrt(var_x) <= sqrt(arma::datum::eps))) {
               arma_sd(i, j) = 0;
             } else {
-              arma_sd(i, j) = sqrt(sumsq_x / (sum_w - sumsq_w / sum_w));
+              arma_sd(i, j) = sqrt(var_x);
             }
             
           } else {
@@ -2658,8 +2651,8 @@ struct RollSdOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollSdBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollSdOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -2674,12 +2667,12 @@ struct RollSdBatchMat : public Worker {
   arma::mat& arma_sd;           // destination (pass by reference)
   
   // initialize with source and destination
-  RollSdBatchMat(const NumericMatrix x, const int n,
-                 const int n_rows_x, const int n_cols_x,
-                 const int width, const arma::vec arma_weights,
-                 const bool center, const int min_obs,
-                 const arma::uvec arma_any_na, const bool na_restore,
-                 arma::mat& arma_sd)
+  RollSdOfflineMat(const NumericMatrix x, const int n,
+                   const int n_rows_x, const int n_cols_x,
+                   const int width, const arma::vec arma_weights,
+                   const bool center, const int min_obs,
+                   const arma::uvec arma_any_na, const bool na_restore,
+                   arma::mat& arma_sd)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -2764,13 +2757,7 @@ struct RollSdBatchMat : public Worker {
         }
         
         if ((n_obs > 1) && (n_obs >= min_obs)) {
-          
-          if (std::abs(sumsq_x) <= sqrt(arma::datum::eps)) {
-            arma_sd(i, j) = 0;
-          } else {
-            arma_sd(i, j) = sqrt(sumsq_x / (sum_w - sumsq_w / sum_w));
-          }
-          
+          arma_sd(i, j) = sqrt(sumsq_x / (sum_w - sumsq_w / sum_w));
         } else {
           arma_sd(i, j) = NA_REAL;
         }
@@ -3035,8 +3022,8 @@ struct RollScaleOnlineMat : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollScaleBatchMat : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollScaleOfflineMat : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -3052,12 +3039,12 @@ struct RollScaleBatchMat : public Worker {
   arma::mat& arma_scale;        // destination (pass by reference)
   
   // initialize with source and destination
-  RollScaleBatchMat(const NumericMatrix x, const int n,
-                    const int n_rows_x, const int n_cols_x,
-                    const int width, const arma::vec arma_weights,
-                    const bool center, const bool scale,
-                    const int min_obs, const arma::uvec arma_any_na,
-                    const bool na_restore, arma::mat& arma_scale)
+  RollScaleOfflineMat(const NumericMatrix x, const int n,
+                      const int n_rows_x, const int n_cols_x,
+                      const int width, const arma::vec arma_weights,
+                      const bool center, const bool scale,
+                      const int min_obs, const arma::uvec arma_any_na,
+                      const bool na_restore, arma::mat& arma_scale)
     : x(x), n(n),
       n_rows_x(n_rows_x), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -3484,23 +3471,11 @@ struct RollCovOnlineMatXX : public Worker {
                     arma_cov(j, k, i) = NA_REAL;
                     
                   } else {
-                    
-                    if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                      arma_cov(j, k, i) = 0;
-                    } else {
-                      arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
-                    }
-                    
+                    arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
                   }
                   
                 } else if (!scale) {
-                  
-                  if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                    arma_cov(j, k, i) = 0;
-                  } else {
-                    arma_cov(j, k, i) = sumsq_xy / (sum_w - sumsq_w / sum_w);
-                  }
-                  
+                  arma_cov(j, k, i) = sumsq_xy / (sum_w - sumsq_w / sum_w);
                 }
                 
               } else {
@@ -3810,23 +3785,11 @@ struct RollCovOnlineMatXY : public Worker {
                     arma_cov(j, k, i) = NA_REAL;
                     
                   } else {
-                    
-                    if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                      arma_cov(j, k, i) = 0;
-                    } else {
-                      arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
-                    }
-                    
+                    arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
                   }
                   
                 } else if (!scale) {
-                  
-                  if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                    arma_cov(j, k, i) = 0;
-                  } else {
-                    arma_cov(j, k, i) = sumsq_xy / (sum_w - sumsq_w / sum_w);
-                  }
-                  
+                  arma_cov(j, k, i) = sumsq_xy / (sum_w - sumsq_w / sum_w);
                 }
                 
               } else {
@@ -3852,8 +3815,8 @@ struct RollCovOnlineMatXY : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollCovBatchMatXX : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollCovOfflineMatXX : public Worker {
   
   const RMatrix<double> x;       // source
   const int n;
@@ -3869,12 +3832,12 @@ struct RollCovBatchMatXX : public Worker {
   arma::cube& arma_cov;          // destination (pass by reference)
   
   // initialize with source and destination
-  RollCovBatchMatXX(const NumericMatrix x, const int n,
-                    const int n_rows_xy, const int n_cols_x,
-                    const int width, const arma::vec arma_weights,
-                    const bool center, const bool scale, 
-                    const int min_obs, const arma::uvec arma_any_na,
-                    const bool na_restore, arma::cube& arma_cov)
+  RollCovOfflineMatXX(const NumericMatrix x, const int n,
+                      const int n_rows_xy, const int n_cols_x,
+                      const int width, const arma::vec arma_weights,
+                      const bool center, const bool scale, 
+                      const int min_obs, const arma::uvec arma_any_na,
+                      const bool na_restore, arma::cube& arma_cov)
     : x(x), n(n),
       n_rows_xy(n_rows_xy), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -3894,10 +3857,10 @@ struct RollCovBatchMatXX : public Worker {
         floor((sqrt((long double)(4 * n_cols_x * (n_cols_x + 1) - (7 + 8 * z_unique))) - 1) / 2) - 1;
       int j = z_unique - n_cols_x * k + k * (k + 1) / 2;
       
+      long double sumsq_x = 0;
+      long double sumsq_y = 0;
       long double mean_x = 0;
       long double mean_y = 0;
-      long double var_x = 0;
-      long double var_y = 0;
       
       // don't compute if missing value and 'na_restore' argument is TRUE
       if ((!na_restore) || (na_restore && !std::isnan(x(i, j)) &&
@@ -3939,8 +3902,6 @@ struct RollCovBatchMatXX : public Worker {
           if (scale) {
             
             int count = 0;
-            long double sumsq_x = 0;
-            long double sumsq_y = 0;
             
             // number of observations is either the window size or,
             // for partial results, the number of the current row
@@ -3973,10 +3934,6 @@ struct RollCovBatchMatXX : public Worker {
               count += 1;
               
             }
-            
-            // compute the unbiased estimate of variance
-            var_x = sumsq_x;
-            var_y = sumsq_y;
             
           }
           
@@ -4020,29 +3977,17 @@ struct RollCovBatchMatXX : public Worker {
             if (scale) {
               
               // don't compute if the standard deviation is zero
-              if ((var_x < 0) || (var_y < 0) ||
-                  (sqrt(var_x) <= sqrt(arma::datum::eps)) || (sqrt(var_y) <= sqrt(arma::datum::eps))) {
+              if ((sumsq_x < 0) || (sumsq_y < 0) ||
+                  (sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
                 
                 arma_cov(j, k, i) = NA_REAL;
                 
               } else {
-                
-                if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                  arma_cov(j, k, i) = 0;
-                } else {
-                  arma_cov(j, k, i) = sumsq_xy / (sqrt(var_x) * sqrt(var_y));
-                }
-                
+                arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
               }
               
             } else if (!scale) {
-              
-              if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                arma_cov(j, k, i) = 0;
-              } else {
-                arma_cov(j, k, i) = sumsq_xy / (sum_w - sumsq_w / sum_w);
-              }
-              
+              arma_cov(j, k, i) = sumsq_xy / (sum_w - sumsq_w / sum_w);
             }
             
           } else {
@@ -4068,8 +4013,8 @@ struct RollCovBatchMatXX : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollCovBatchMatXY : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollCovOfflineMatXY : public Worker {
   
   const RMatrix<double> x;       // source
   const RMatrix<double> y;       // source
@@ -4087,13 +4032,13 @@ struct RollCovBatchMatXY : public Worker {
   arma::cube& arma_cov;          // destination (pass by reference)
   
   // initialize with source and destination
-  RollCovBatchMatXY(const NumericMatrix x, const NumericMatrix y,
-                    const int n, const int n_rows_xy,
-                    const int n_cols_x, const int n_cols_y,
-                    const int width, const arma::vec arma_weights,
-                    const bool center, const bool scale,
-                    const int min_obs, const arma::uvec arma_any_na,
-                    const bool na_restore, arma::cube& arma_cov)
+  RollCovOfflineMatXY(const NumericMatrix x, const NumericMatrix y,
+                      const int n, const int n_rows_xy,
+                      const int n_cols_x, const int n_cols_y,
+                      const int width, const arma::vec arma_weights,
+                      const bool center, const bool scale,
+                      const int min_obs, const arma::uvec arma_any_na,
+                      const bool na_restore, arma::cube& arma_cov)
     : x(x), y(y),
       n(n), n_rows_xy(n_rows_xy),
       n_cols_x(n_cols_x), n_cols_y(n_cols_y),
@@ -4111,10 +4056,10 @@ struct RollCovBatchMatXY : public Worker {
       int j = z / (n_cols_y * n_rows_xy);
       int k = (z / n_rows_xy) % n_cols_y;
       
+      long double sumsq_x = 0;
+      long double sumsq_y = 0;
       long double mean_x = 0;
       long double mean_y = 0;
-      long double var_x = 0;
-      long double var_y = 0;
       
       // don't compute if missing value and 'na_restore' argument is TRUE
       if ((!na_restore) || (na_restore && !std::isnan(x(i, j)) &&
@@ -4156,8 +4101,6 @@ struct RollCovBatchMatXY : public Worker {
           if (scale) {
             
             int count = 0;
-            long double sumsq_x = 0;
-            long double sumsq_y = 0;
             
             // number of observations is either the window size or,
             // for partial results, the number of the current row
@@ -4190,10 +4133,6 @@ struct RollCovBatchMatXY : public Worker {
               count += 1;
               
             }
-            
-            // compute the unbiased estimate of variance
-            var_x = sumsq_x;
-            var_y = sumsq_y;
             
           }
           
@@ -4237,29 +4176,17 @@ struct RollCovBatchMatXY : public Worker {
             if (scale) {
               
               // don't compute if the standard deviation is zero
-              if ((var_x < 0) || (var_y < 0) ||
-                  (sqrt(var_x) <= sqrt(arma::datum::eps)) || (sqrt(var_y) <= sqrt(arma::datum::eps))) {
+              if ((sumsq_x < 0) || (sumsq_y < 0) ||
+                  (sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
                 
                 arma_cov(j, k, i) = NA_REAL;
                 
               } else {
-                
-                if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                  arma_cov(j, k, i) = 0;
-                } else {
-                  arma_cov(j, k, i) = sumsq_xy / (sqrt(var_x) * sqrt(var_y));
-                }
-                
+                arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
               }
               
             } else if (!scale) {
-              
-              if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                arma_cov(j, k, i) = 0;
-              } else {
-                arma_cov(j, k, i) = sumsq_xy / (sum_w - sumsq_w / sum_w);
-              }
-              
+              arma_cov(j, k, i) = sumsq_xy / (sum_w - sumsq_w / sum_w);
             }
             
           } else {
@@ -4539,13 +4466,7 @@ struct RollCovOnlineMatLm : public Worker {
               
               // if ((n_obs > 1) && (n_obs >= min_obs)) {
               if (n_obs >= min_obs) {
-                
-                if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-                  arma_cov(j, k, i) = 0;
-                } else {
-                  arma_cov(j, k, i) = sumsq_xy;
-                }
-                
+                arma_cov(j, k, i) = sumsq_xy;
               } else {
                 arma_cov(j, k, i) = NA_REAL;
               }
@@ -4572,8 +4493,8 @@ struct RollCovOnlineMatLm : public Worker {
   
 };
 
-// 'Worker' function for computing the rolling statistic using a standard algorithm
-struct RollCovBatchMatLm : public Worker {
+// 'Worker' function for computing the rolling statistic using an offline algorithm
+struct RollCovOfflineMatLm : public Worker {
   
   const RMatrix<double> x;      // source
   const int n;
@@ -4591,13 +4512,13 @@ struct RollCovBatchMatLm : public Worker {
   arma::cube& arma_cov;
   
   // initialize with source and destination
-  RollCovBatchMatLm(const NumericMatrix x, const int n,
-                    const int n_rows_xy, const int n_cols_x,
-                    const int width, const arma::vec arma_weights,
-                    const bool intercept, const int min_obs,
-                    const arma::uvec arma_any_na, const bool na_restore,
-                    arma::vec& arma_n_obs, arma::vec& arma_sum_w,
-                    arma::mat& arma_mean, arma::cube& arma_cov)
+  RollCovOfflineMatLm(const NumericMatrix x, const int n,
+                      const int n_rows_xy, const int n_cols_x,
+                      const int width, const arma::vec arma_weights,
+                      const bool intercept, const int min_obs,
+                      const arma::uvec arma_any_na, const bool na_restore,
+                      arma::vec& arma_n_obs, arma::vec& arma_sum_w,
+                      arma::mat& arma_mean, arma::cube& arma_cov)
     : x(x), n(n),
       n_rows_xy(n_rows_xy), n_cols_x(n_cols_x),
       width(width), arma_weights(arma_weights),
@@ -4708,13 +4629,7 @@ struct RollCovBatchMatLm : public Worker {
           
           // if ((n_obs > 1) && (n_obs >= min_obs)) {
           if (n_obs >= min_obs) {
-            
-            if (std::abs(sumsq_xy) <= sqrt(arma::datum::eps)) {
-              arma_cov(j, k, i) = 0;
-            } else {
-              arma_cov(j, k, i) = sumsq_xy;
-            }
-            
+            arma_cov(j, k, i) = sumsq_xy;
           } else {
             arma_cov(j, k, i) = NA_REAL;
           }
@@ -4802,7 +4717,7 @@ struct RollLmMatInterceptTRUE : public Worker {
           
           // r-squared
           long double var_y = sigma(n_cols_x - 1, n_cols_x - 1);
-          if ((var_y < 0) || (sqrt(var_y) <= sqrt(arma::datum::eps))) {
+          if ((var_y < 0) || (sqrt(var_y) <= sqrt(arma::datum::eps))) {      
             arma_rsq[i] = NA_REAL;
           } else {
             arma_rsq[i] = as_scalar(trans_coef * A * coef) / var_y;
@@ -4817,12 +4732,6 @@ struct RollLmMatInterceptTRUE : public Worker {
             
             // residual variance
             long double var_resid = (1 - arma_rsq[i]) * var_y / df_resid;
-            
-            // standard errors
-            if ((var_resid < 0) || (sqrt(var_resid) <= sqrt(arma::datum::eps))) {
-              var_resid = 0;
-            }
-            
             arma_se(i, 0) = sqrt(var_resid * (1 / arma_sum_w[i] +
               as_scalar(mean_x * A_inv * trans(mean_x))));
             arma_se.submat(i, 1, i, n_cols_x - 1) = sqrt(var_resid * trans(diagvec(A_inv)));
@@ -4919,11 +4828,7 @@ struct RollLmMatInterceptFALSE : public Worker {
           
           // r-squared
           long double var_y = sigma(n_cols_x - 1, n_cols_x - 1);
-          if ((var_y < 0) || (sqrt(var_y) <= sqrt(arma::datum::eps))) {
-            arma_rsq[i] = NA_REAL;
-          } else {
-            arma_rsq[i] = as_scalar(trans_coef * A * coef) / var_y;
-          }
+          arma_rsq[i] = as_scalar(trans_coef * A * coef) / var_y;
           
           // check if matrix is singular
           arma::mat A_inv(n_cols_x, n_cols_x);
@@ -4934,12 +4839,6 @@ struct RollLmMatInterceptFALSE : public Worker {
             
             // residual variance
             long double var_resid = (1 - arma_rsq[i]) * var_y / df_resid;
-            
-            // standard errors
-            if ((var_resid < 0) || (sqrt(var_resid) <= sqrt(arma::datum::eps))) {
-              var_resid = 0;
-            }
-            
             arma_se.row(i) = sqrt(var_resid * trans(diagvec(A_inv)));
             
           } else {

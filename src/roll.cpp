@@ -58,7 +58,8 @@ void check_weights_lm(const int& n_rows_xy, const int& width,
   
 }
 
-bool check_lambda(const arma::vec& weights, const bool& online) {
+bool check_lambda(const arma::vec& weights, const int& n_rows_x,
+                  const int& width, const bool& online) {
   
   // check if equal-weights
   bool status_eq = all(weights == weights[0]);
@@ -80,8 +81,12 @@ bool check_lambda(const arma::vec& weights, const bool& online) {
       lambda = weights[n - i - 2] / weights[n - i - 1];
       
       // tolerance for consistency with R's all.equal
-      if ((i > 0) && (std::abs(lambda - lambda_prev) > sqrt(arma::datum::eps))) {
+      if (((i > 0) && (std::abs(lambda - lambda_prev) > sqrt(arma::datum::eps))) ||
+          ((weights[n - i - 2] > weights[n - i - 1]) && (width < n_rows_x)) ||
+          (std::isnan(lambda) || (std::isinf(lambda)))) {
+        
         status_exp = false;
+        
       }
       
       i += 1;
@@ -91,7 +96,7 @@ bool check_lambda(const arma::vec& weights, const bool& online) {
   }
   
   if (!status_exp && online) {
-    warning("'online' is only supported for equal or exponential 'weights'");
+    warning("'online' is only supported for equal or exponential decay 'weights'");
   }
   
   return status_exp;
@@ -327,10 +332,10 @@ SEXP roll_any(const SEXP& x, const int& width,
       
     } else {
       
-      RollAnyBatchMat roll_any_batch(rcpp_x, n_rows_x, n_cols_x, width,
-                                     min_obs, rcpp_any_na, na_restore,
-                                     rcpp_any);
-      parallelFor(0, n_rows_x * n_cols_x, roll_any_batch);
+      RollAnyOfflineMat roll_any_offline(rcpp_x, n_rows_x, n_cols_x, width,
+                                         min_obs, rcpp_any_na, na_restore,
+                                         rcpp_any);
+      parallelFor(0, n_rows_x * n_cols_x, roll_any_offline);
       
     }
     
@@ -371,10 +376,10 @@ SEXP roll_any(const SEXP& x, const int& width,
       
     } else {
       
-      RollAnyBatchVec roll_any_batch(rcpp_x, n_rows_x, width,
-                                     min_obs, na_restore,
-                                     rcpp_any);
-      parallelFor(0, n_rows_x, roll_any_batch);
+      RollAnyOfflineVec roll_any_offline(rcpp_x, n_rows_x, width,
+                                         min_obs, na_restore,
+                                         rcpp_any);
+      parallelFor(0, n_rows_x, roll_any_offline);
       
     }
     
@@ -431,10 +436,10 @@ SEXP roll_all(const SEXP& x, const int& width,
       
     } else {
       
-      RollAllBatchMat roll_all_batch(rcpp_x, n_rows_x, n_cols_x, width,
-                                     min_obs, rcpp_any_na, na_restore,
-                                     rcpp_all);
-      parallelFor(0, n_rows_x * n_cols_x, roll_all_batch);
+      RollAllOfflineMat roll_all_offline(rcpp_x, n_rows_x, n_cols_x, width,
+                                         min_obs, rcpp_any_na, na_restore,
+                                         rcpp_all);
+      parallelFor(0, n_rows_x * n_cols_x, roll_all_offline);
       
     }
     
@@ -475,10 +480,10 @@ SEXP roll_all(const SEXP& x, const int& width,
       
     } else {
       
-      RollAllBatchVec roll_all_batch(rcpp_x, n_rows_x, width,
-                                     min_obs, na_restore,
-                                     rcpp_all);
-      parallelFor(0, n_rows_x, roll_all_batch);
+      RollAllOfflineVec roll_all_offline(rcpp_x, n_rows_x, width,
+                                         min_obs, na_restore,
+                                         rcpp_all);
+      parallelFor(0, n_rows_x, roll_all_offline);
       
     }
     
@@ -519,7 +524,7 @@ SEXP roll_sum(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -544,11 +549,11 @@ SEXP roll_sum(const SEXP& x, const int& width,
       
     } else {
       
-      RollSumBatchMat roll_sum_batch(xx, n, n_rows_x, n_cols_x, width,
-                                     weights, min_obs,
-                                     arma_any_na, na_restore,
-                                     arma_sum);
-      parallelFor(0, n_rows_x * n_cols_x, roll_sum_batch);
+      RollSumOfflineMat roll_sum_offline(xx, n, n_rows_x, n_cols_x, width,
+                                         weights, min_obs,
+                                         arma_any_na, na_restore,
+                                         arma_sum);
+      parallelFor(0, n_rows_x * n_cols_x, roll_sum_offline);
       
     }
     
@@ -578,7 +583,7 @@ SEXP roll_sum(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -595,11 +600,11 @@ SEXP roll_sum(const SEXP& x, const int& width,
       
     } else {
       
-      RollSumBatchVec roll_sum_batch(xx, n, n_rows_x, width,
-                                     weights, min_obs,
-                                     na_restore,
-                                     arma_sum);
-      parallelFor(0, n_rows_x, roll_sum_batch);
+      RollSumOfflineVec roll_sum_offline(xx, n, n_rows_x, width,
+                                         weights, min_obs,
+                                         na_restore,
+                                         arma_sum);
+      parallelFor(0, n_rows_x, roll_sum_offline);
       
     }
     
@@ -640,7 +645,7 @@ SEXP roll_prod(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -665,11 +670,11 @@ SEXP roll_prod(const SEXP& x, const int& width,
       
     } else {
       
-      RollProdBatchMat roll_prod_batch(xx, n, n_rows_x, n_cols_x, width,
-                                       weights, min_obs,
-                                       arma_any_na, na_restore,
-                                       arma_prod);
-      parallelFor(0, n_rows_x * n_cols_x, roll_prod_batch);
+      RollProdOfflineMat roll_prod_offline(xx, n, n_rows_x, n_cols_x, width,
+                                           weights, min_obs,
+                                           arma_any_na, na_restore,
+                                           arma_prod);
+      parallelFor(0, n_rows_x * n_cols_x, roll_prod_offline);
       
     }
     
@@ -699,7 +704,7 @@ SEXP roll_prod(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -716,11 +721,11 @@ SEXP roll_prod(const SEXP& x, const int& width,
       
     } else {
       
-      RollProdBatchVec roll_prod_batch(xx, n, n_rows_x, width,
-                                       weights, min_obs,
-                                       na_restore,
-                                       arma_prod);
-      parallelFor(0, n_rows_x, roll_prod_batch);
+      RollProdOfflineVec roll_prod_offline(xx, n, n_rows_x, width,
+                                           weights, min_obs,
+                                           na_restore,
+                                           arma_prod);
+      parallelFor(0, n_rows_x, roll_prod_offline);
       
     }
     
@@ -761,7 +766,7 @@ SEXP roll_mean(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -786,11 +791,11 @@ SEXP roll_mean(const SEXP& x, const int& width,
       
     } else {
       
-      RollMeanBatchMat roll_mean_batch(xx, n, n_rows_x, n_cols_x, width,
-                                       weights, min_obs,
-                                       arma_any_na, na_restore,
-                                       arma_mean);
-      parallelFor(0, n_rows_x * n_cols_x, roll_mean_batch);
+      RollMeanOfflineMat roll_mean_offline(xx, n, n_rows_x, n_cols_x, width,
+                                           weights, min_obs,
+                                           arma_any_na, na_restore,
+                                           arma_mean);
+      parallelFor(0, n_rows_x * n_cols_x, roll_mean_offline);
       
     }
     
@@ -820,7 +825,7 @@ SEXP roll_mean(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -837,11 +842,11 @@ SEXP roll_mean(const SEXP& x, const int& width,
       
     } else {
       
-      RollMeanBatchVec roll_mean_batch(xx, n, n_rows_x, width,
-                                       weights, min_obs,
-                                       na_restore,
-                                       arma_mean);
-      parallelFor(0, n_rows_x, roll_mean_batch);
+      RollMeanOfflineVec roll_mean_offline(xx, n, n_rows_x, width,
+                                           weights, min_obs,
+                                           na_restore,
+                                           arma_mean);
+      parallelFor(0, n_rows_x, roll_mean_offline);
       
     }
     
@@ -906,11 +911,11 @@ SEXP roll_min(const SEXP& x, const int& width,
       
     } else {
       
-      RollMinBatchMat roll_min_batch(xx, n, n_rows_x, n_cols_x, width,
-                                     weights, min_obs,
-                                     arma_any_na, na_restore,
-                                     arma_min);
-      parallelFor(0, n_rows_x * n_cols_x, roll_min_batch);
+      RollMinOfflineMat roll_min_offline(xx, n, n_rows_x, n_cols_x, width,
+                                         weights, min_obs,
+                                         arma_any_na, na_restore,
+                                         arma_min);
+      parallelFor(0, n_rows_x * n_cols_x, roll_min_offline);
       
     }
     
@@ -956,11 +961,11 @@ SEXP roll_min(const SEXP& x, const int& width,
       
     } else {
       
-      RollMinBatchVec roll_min_batch(xx, n, n_rows_x, width,
-                                     weights, min_obs,
-                                     na_restore,
-                                     arma_min);
-      parallelFor(0, n_rows_x, roll_min_batch);
+      RollMinOfflineVec roll_min_offline(xx, n, n_rows_x, width,
+                                         weights, min_obs,
+                                         na_restore,
+                                         arma_min);
+      parallelFor(0, n_rows_x, roll_min_offline);
       
     }
     
@@ -1025,11 +1030,11 @@ SEXP roll_max(const SEXP& x, const int& width,
       
     } else {
       
-      RollMaxBatchMat roll_max_batch(xx, n, n_rows_x, n_cols_x, width,
-                                     weights, min_obs,
-                                     arma_any_na, na_restore,
-                                     arma_max);
-      parallelFor(0, n_rows_x * n_cols_x, roll_max_batch);
+      RollMaxOfflineMat roll_max_offline(xx, n, n_rows_x, n_cols_x, width,
+                                         weights, min_obs,
+                                         arma_any_na, na_restore,
+                                         arma_max);
+      parallelFor(0, n_rows_x * n_cols_x, roll_max_offline);
       
     }
     
@@ -1075,11 +1080,11 @@ SEXP roll_max(const SEXP& x, const int& width,
       
     } else {
       
-      RollMaxBatchVec roll_max_batch(xx, n, n_rows_x, width,
-                                     weights, min_obs,
-                                     na_restore,
-                                     arma_max);
-      parallelFor(0, n_rows_x, roll_max_batch);
+      RollMaxOfflineVec roll_max_offline(xx, n, n_rows_x, width,
+                                         weights, min_obs,
+                                         na_restore,
+                                         arma_max);
+      parallelFor(0, n_rows_x, roll_max_offline);
       
     }
     
@@ -1144,11 +1149,11 @@ SEXP roll_idxmin(const SEXP& x, const int& width,
       
     } else {
       
-      RollIdxMinBatchMat roll_idxmin_batch(xx, n, n_rows_x, n_cols_x, width,
-                                           weights, min_obs,
-                                           rcpp_any_na, na_restore,
-                                           rcpp_idxmin);
-      parallelFor(0, n_rows_x * n_cols_x, roll_idxmin_batch);
+      RollIdxMinOfflineMat roll_idxmin_offline(xx, n, n_rows_x, n_cols_x, width,
+                                               weights, min_obs,
+                                               rcpp_any_na, na_restore,
+                                               rcpp_idxmin);
+      parallelFor(0, n_rows_x * n_cols_x, roll_idxmin_offline);
       
     }
     
@@ -1194,11 +1199,11 @@ SEXP roll_idxmin(const SEXP& x, const int& width,
       
     } else {
       
-      RollIdxMinBatchVec roll_idxmin_batch(xx, n, n_rows_x, width,
-                                           weights, min_obs,
-                                           na_restore,
-                                           rcpp_idxmin);
-      parallelFor(0, n_rows_x, roll_idxmin_batch);
+      RollIdxMinOfflineVec roll_idxmin_offline(xx, n, n_rows_x, width,
+                                               weights, min_obs,
+                                               na_restore,
+                                               rcpp_idxmin);
+      parallelFor(0, n_rows_x, roll_idxmin_offline);
       
     }
     
@@ -1263,11 +1268,11 @@ SEXP roll_idxmax(const SEXP& x, const int& width,
       
     } else {
       
-      RollIdxMaxBatchMat roll_idxmax_batch(xx, n, n_rows_x, n_cols_x, width,
-                                           weights, min_obs,
-                                           rcpp_any_na, na_restore,
-                                           rcpp_idxmax);
-      parallelFor(0, n_rows_x * n_cols_x, roll_idxmax_batch);
+      RollIdxMaxOfflineMat roll_idxmax_offline(xx, n, n_rows_x, n_cols_x, width,
+                                               weights, min_obs,
+                                               rcpp_any_na, na_restore,
+                                               rcpp_idxmax);
+      parallelFor(0, n_rows_x * n_cols_x, roll_idxmax_offline);
       
     }
     
@@ -1313,11 +1318,11 @@ SEXP roll_idxmax(const SEXP& x, const int& width,
       
     } else {
       
-      RollIdxMaxBatchVec roll_idxmax_batch(xx, n, n_rows_x, width,
-                                           weights, min_obs,
-                                           na_restore,
-                                           rcpp_idxmin);
-      parallelFor(0, n_rows_x, roll_idxmax_batch);
+      RollIdxMaxOfflineVec roll_idxmax_offline(xx, n, n_rows_x, width,
+                                               weights, min_obs,
+                                               na_restore,
+                                               rcpp_idxmin);
+      parallelFor(0, n_rows_x, roll_idxmax_offline);
       
     }
     
@@ -1375,19 +1380,19 @@ SEXP roll_median(const SEXP& x, const int& width,
     if (online) {
       
       warning("'online' is not supported");
-      RollMedianBatchMat roll_median_batch(xx, n, n_rows_x, n_cols_x, width,
-                                           weights, min_obs,
-                                           arma_any_na, na_restore,
-                                           arma_median);
-      parallelFor(0, n_rows_x * n_cols_x, roll_median_batch);
+      RollMedianOfflineMat roll_median_offline(xx, n, n_rows_x, n_cols_x, width,
+                                               weights, min_obs,
+                                               arma_any_na, na_restore,
+                                               arma_median);
+      parallelFor(0, n_rows_x * n_cols_x, roll_median_offline);
       
     } else {
       
-      RollMedianBatchMat roll_median_batch(xx, n, n_rows_x, n_cols_x, width,
-                                           weights, min_obs,
-                                           arma_any_na, na_restore,
-                                           arma_median);
-      parallelFor(0, n_rows_x * n_cols_x, roll_median_batch);
+      RollMedianOfflineMat roll_median_offline(xx, n, n_rows_x, n_cols_x, width,
+                                               weights, min_obs,
+                                               arma_any_na, na_restore,
+                                               arma_median);
+      parallelFor(0, n_rows_x * n_cols_x, roll_median_offline);
       
     }
     
@@ -1426,19 +1431,19 @@ SEXP roll_median(const SEXP& x, const int& width,
     if (online) {
       
       warning("'online' is not supported"); 
-      RollMedianBatchVec roll_median_batch(xx, n, n_rows_x, width,
-                                           weights, min_obs,
-                                           na_restore,
-                                           arma_median);
-      parallelFor(0, n_rows_x, roll_median_batch);
+      RollMedianOfflineVec roll_median_offline(xx, n, n_rows_x, width,
+                                               weights, min_obs,
+                                               na_restore,
+                                               arma_median);
+      parallelFor(0, n_rows_x, roll_median_offline);
       
     } else {
       
-      RollMedianBatchVec roll_median_batch(xx, n, n_rows_x, width,
-                                           weights, min_obs,
-                                           na_restore,
-                                           arma_median);
-      parallelFor(0, n_rows_x, roll_median_batch);
+      RollMedianOfflineVec roll_median_offline(xx, n, n_rows_x, width,
+                                               weights, min_obs,
+                                               na_restore,
+                                               arma_median);
+      parallelFor(0, n_rows_x, roll_median_offline);
       
     }
     
@@ -1479,7 +1484,7 @@ SEXP roll_var(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -1504,11 +1509,11 @@ SEXP roll_var(const SEXP& x, const int& width,
       
     } else {
       
-      RollVarBatchMat roll_var_batch(xx, n, n_rows_x, n_cols_x, width,
-                                     weights, center, min_obs,
-                                     arma_any_na, na_restore,
-                                     arma_var);
-      parallelFor(0, n_rows_x * n_cols_x, roll_var_batch);
+      RollVarOfflineMat roll_var_offline(xx, n, n_rows_x, n_cols_x, width,
+                                         weights, center, min_obs,
+                                         arma_any_na, na_restore,
+                                         arma_var);
+      parallelFor(0, n_rows_x * n_cols_x, roll_var_offline);
       
     }
     
@@ -1538,7 +1543,7 @@ SEXP roll_var(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -1555,11 +1560,11 @@ SEXP roll_var(const SEXP& x, const int& width,
       
     } else {
       
-      RollVarBatchVec roll_var_batch(xx, n, n_rows_x, width,
-                                     weights, center, min_obs,
-                                     na_restore,
-                                     arma_var);
-      parallelFor(0, n_rows_x, roll_var_batch);
+      RollVarOfflineVec roll_var_offline(xx, n, n_rows_x, width,
+                                         weights, center, min_obs,
+                                         na_restore,
+                                         arma_var);
+      parallelFor(0, n_rows_x, roll_var_offline);
       
     }
     
@@ -1600,7 +1605,7 @@ SEXP roll_sd(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -1625,11 +1630,11 @@ SEXP roll_sd(const SEXP& x, const int& width,
       
     } else {
       
-      RollSdBatchMat roll_sd_batch(xx, n, n_rows_x, n_cols_x, width,
-                                   weights, center, min_obs,
-                                   arma_any_na, na_restore,
-                                   arma_sd);
-      parallelFor(0, n_rows_x * n_cols_x, roll_sd_batch);
+      RollSdOfflineMat roll_sd_offline(xx, n, n_rows_x, n_cols_x, width,
+                                       weights, center, min_obs,
+                                       arma_any_na, na_restore,
+                                       arma_sd);
+      parallelFor(0, n_rows_x * n_cols_x, roll_sd_offline);
       
     }
     
@@ -1659,7 +1664,7 @@ SEXP roll_sd(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -1676,11 +1681,11 @@ SEXP roll_sd(const SEXP& x, const int& width,
       
     } else {
       
-      RollSdBatchVec roll_sd_batch(xx, n, n_rows_x, width,
-                                   weights, center, min_obs,
-                                   na_restore,
-                                   arma_sd);
-      parallelFor(0, n_rows_x, roll_sd_batch);
+      RollSdOfflineVec roll_sd_offline(xx, n, n_rows_x, width,
+                                       weights, center, min_obs,
+                                       na_restore,
+                                       arma_sd);
+      parallelFor(0, n_rows_x, roll_sd_offline);
       
     }
     
@@ -1722,7 +1727,7 @@ SEXP roll_scale(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -1747,11 +1752,11 @@ SEXP roll_scale(const SEXP& x, const int& width,
       
     } else {
       
-      RollScaleBatchMat roll_scale_batch(xx, n, n_rows_x, n_cols_x, width,
-                                         weights, center, scale, min_obs,
-                                         arma_any_na, na_restore,
-                                         arma_scale);
-      parallelFor(0, n_rows_x * n_cols_x, roll_scale_batch);
+      RollScaleOfflineMat roll_scale_offline(xx, n, n_rows_x, n_cols_x, width,
+                                             weights, center, scale, min_obs,
+                                             arma_any_na, na_restore,
+                                             arma_scale);
+      parallelFor(0, n_rows_x * n_cols_x, roll_scale_offline);
       
     }
     
@@ -1781,7 +1786,7 @@ SEXP roll_scale(const SEXP& x, const int& width,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -1798,11 +1803,11 @@ SEXP roll_scale(const SEXP& x, const int& width,
       
     } else {
       
-      RollScaleBatchVec roll_scale_batch(xx, n, n_rows_x, width,
-                                         weights, center, scale, min_obs,
-                                         na_restore,
-                                         arma_scale);
-      parallelFor(0, n_rows_x, roll_scale_batch);
+      RollScaleOfflineVec roll_scale_offline(xx, n, n_rows_x, width,
+                                             weights, center, scale, min_obs,
+                                             na_restore,
+                                             arma_scale);
+      parallelFor(0, n_rows_x, roll_scale_offline);
       
     }
     
@@ -1849,7 +1854,7 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -1893,20 +1898,20 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
       if (symmetric) {
         
         // y is null
-        RollCovBatchMatXX roll_cov_batch(xx, n, n_rows_xy, n_cols_x, width,
-                                         weights, center, scale, min_obs,
-                                         arma_any_na, na_restore,
-                                         arma_cov);
-        parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_batch);
+        RollCovOfflineMatXX roll_cov_offline(xx, n, n_rows_xy, n_cols_x, width,
+                                             weights, center, scale, min_obs,
+                                             arma_any_na, na_restore,
+                                             arma_cov);
+        parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_offline);
         
       } else if (!symmetric) {
         
         // y is not null
-        RollCovBatchMatXY roll_cov_batch(xx, yy, n, n_rows_xy, n_cols_x, n_cols_y, width,
-                                         weights, center, scale, min_obs,
-                                         arma_any_na, na_restore,
-                                         arma_cov);
-        parallelFor(0, n_rows_xy * n_cols_x * n_cols_y, roll_cov_batch);
+        RollCovOfflineMatXY roll_cov_offline(xx, yy, n, n_rows_xy, n_cols_x, n_cols_y, width,
+                                             weights, center, scale, min_obs,
+                                             arma_any_na, na_restore,
+                                             arma_cov);
+        parallelFor(0, n_rows_xy * n_cols_x * n_cols_y, roll_cov_offline);
         
       }
       
@@ -1951,7 +1956,7 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -1995,20 +2000,20 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
       if (symmetric) {
         
         // y is null
-        RollCovBatchMatXX roll_cov_batch(xx, n, n_rows_xy, n_cols_x, width,
-                                         weights, center, scale, min_obs,
-                                         arma_any_na, na_restore,
-                                         arma_cov);
-        parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_batch);
+        RollCovOfflineMatXX roll_cov_offline(xx, n, n_rows_xy, n_cols_x, width,
+                                             weights, center, scale, min_obs,
+                                             arma_any_na, na_restore,
+                                             arma_cov);
+        parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_offline);
         
       } else if (!symmetric) {
         
         // y is not null
-        RollCovBatchMatXY roll_cov_batch(xx, yyy, n, n_rows_xy, n_cols_x, n_cols_y, width,
-                                         weights, center, scale, min_obs,
-                                         arma_any_na, na_restore,
-                                         arma_cov);
-        parallelFor(0, n_rows_xy * n_cols_x * n_cols_y, roll_cov_batch);
+        RollCovOfflineMatXY roll_cov_offline(xx, yyy, n, n_rows_xy, n_cols_x, n_cols_y, width,
+                                             weights, center, scale, min_obs,
+                                             arma_any_na, na_restore,
+                                             arma_cov);
+        parallelFor(0, n_rows_xy * n_cols_x * n_cols_y, roll_cov_offline);
         
       }
       
@@ -2053,7 +2058,7 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -2097,20 +2102,20 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
       if (symmetric) {
         
         // y is null
-        RollCovBatchMatXX roll_cov_batch(xxx, n, n_rows_xy, n_cols_x, width,
-                                         weights, center, scale, min_obs,
-                                         arma_any_na, na_restore,
-                                         arma_cov);
-        parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_batch);
+        RollCovOfflineMatXX roll_cov_offline(xxx, n, n_rows_xy, n_cols_x, width,
+                                             weights, center, scale, min_obs,
+                                             arma_any_na, na_restore,
+                                             arma_cov);
+        parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_offline);
         
       } else if (!symmetric) {
         
         // y is not null
-        RollCovBatchMatXY roll_cov_batch(xxx, yy, n, n_rows_xy, n_cols_x, n_cols_y, width,
-                                         weights, center, scale, min_obs,
-                                         arma_any_na, na_restore,
-                                         arma_cov);
-        parallelFor(0, n_rows_xy * n_cols_x * n_cols_y, roll_cov_batch);
+        RollCovOfflineMatXY roll_cov_offline(xxx, yy, n, n_rows_xy, n_cols_x, n_cols_y, width,
+                                             weights, center, scale, min_obs,
+                                             arma_any_na, na_restore,
+                                             arma_cov);
+        parallelFor(0, n_rows_xy * n_cols_x * n_cols_y, roll_cov_offline);
         
       }
       
@@ -2148,7 +2153,7 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -2182,20 +2187,20 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
       if (symmetric) {
         
         // y is null
-        RollCovBatchVecXX roll_cov_batch(xx, n, n_rows_xy, width,
-                                         weights, center, scale, min_obs,
-                                         na_restore,
-                                         arma_cov);
-        parallelFor(0, n_rows_xy, roll_cov_batch);
+        RollCovOfflineVecXX roll_cov_offline(xx, n, n_rows_xy, width,
+                                             weights, center, scale, min_obs,
+                                             na_restore,
+                                             arma_cov);
+        parallelFor(0, n_rows_xy, roll_cov_offline);
         
       } else if (!symmetric) {
         
         // y is not null
-        RollCovBatchVecXY roll_cov_batch(xx, yy, n, n_rows_xy, width,
-                                         weights, center, scale, min_obs,
-                                         na_restore,
-                                         arma_cov);
-        parallelFor(0, n_rows_xy, roll_cov_batch);
+        RollCovOfflineVecXY roll_cov_offline(xx, yy, n, n_rows_xy, width,
+                                             weights, center, scale, min_obs,
+                                             na_restore,
+                                             arma_cov);
+        parallelFor(0, n_rows_xy, roll_cov_offline);
         
       }
       
@@ -2261,7 +2266,7 @@ List roll_lm_z(const SEXP& x, const NumericVector& y,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_lm(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -2295,12 +2300,12 @@ List roll_lm_z(const SEXP& x, const NumericVector& y,
       
     } else {
       
-      RollCovBatchMatLm roll_cov_batch(data, n, n_rows_xy, n_cols_x, width,
-                                       weights, intercept, min_obs,
-                                       arma_any_na, na_restore,
-                                       arma_n_obs, arma_sum_w, arma_mean,
-                                       arma_cov);
-      parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_batch);
+      RollCovOfflineMatLm roll_cov_offline(data, n, n_rows_xy, n_cols_x, width,
+                                           weights, intercept, min_obs,
+                                           arma_any_na, na_restore,
+                                           arma_n_obs, arma_sum_w, arma_mean,
+                                           arma_cov);
+      parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_offline);
       
     }
     
@@ -2359,7 +2364,7 @@ List roll_lm_z(const SEXP& x, const NumericVector& y,
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
     check_weights_lm(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, online);
+    bool status = check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
@@ -2393,12 +2398,12 @@ List roll_lm_z(const SEXP& x, const NumericVector& y,
       
     } else {
       
-      RollCovBatchMatLm roll_cov_batch(data, n, n_rows_xy, n_cols_x, width,
-                                       weights, intercept, min_obs,
-                                       arma_any_na, na_restore,
-                                       arma_n_obs, arma_sum_w, arma_mean,
-                                       arma_cov);
-      parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_batch);
+      RollCovOfflineMatLm roll_cov_offline(data, n, n_rows_xy, n_cols_x, width,
+                                           weights, intercept, min_obs,
+                                           arma_any_na, na_restore,
+                                           arma_n_obs, arma_sum_w, arma_mean,
+                                           arma_cov);
+      parallelFor(0, n_rows_xy * n_cols_x * (n_cols_x + 1) / 2, roll_cov_offline);
       
     }
     
