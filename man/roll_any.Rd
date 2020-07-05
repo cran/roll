@@ -4,14 +4,8 @@
 \alias{roll_any}
 \title{Rolling Any}
 \usage{
-roll_any(
-  x,
-  width,
-  min_obs = width,
-  complete_obs = FALSE,
-  na_restore = FALSE,
-  online = TRUE
-)
+roll_any(x, width, min_obs = width, complete_obs = FALSE,
+  na_restore = FALSE, online = TRUE)
 }
 \arguments{
 \item{x}{logical vector or matrix. Rows are observations and columns are variables.}
@@ -29,17 +23,22 @@ if \code{FALSE} then each value is used.}
 \item{online}{logical. Process observations using an online algorithm.}
 }
 \value{
-An object of the same class and dimension as \code{x} with the rolling any.
+An object of the same class and dimension as \code{x} with the rolling and expanding
+any.
 }
 \description{
-A function for computing the rolling any of time-series data.
+A function for computing the rolling and expanding any of time-series data.
 }
 \examples{
-n_vars <- 3
-n_obs <- 15
-x <- matrix(rnorm(n_obs * n_vars), nrow = n_obs, ncol = n_vars)
+n <- 15
+x <- rnorm(n)
 
-# rolling any
-result <- roll_any(x < 0, 5)
+# rolling any with complete windows
+roll_any(x < 0, width = 5)
 
+# rolling any with partial windows
+roll_any(x < 0, width = 5)
+
+# expanding any with partial windows
+roll_any(x < 0, width = n)
 }

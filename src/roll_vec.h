@@ -421,7 +421,9 @@ struct RollSumOnlineVec {
     long double x_old = 0;
     long double sum_x = 0;
     
-    if (width > 1) {
+    if (arma_weights[n - 1] == 0) {
+      lambda = 1;
+    } else if (width > 1) {
       lambda = arma_weights[n - 2] / arma_weights[n - 1]; // check already passed
     } else {
       lambda = arma_weights[n - 1];
@@ -610,6 +612,7 @@ struct RollProdOnlineVec {
   void operator()() {
     
     int n_obs = 0;
+    int n_zero = 0;
     long double lambda = 0;
     long double n_new = 0;
     long double n_old = 0;
@@ -621,7 +624,9 @@ struct RollProdOnlineVec {
     long double prod_w = 1;
     long double prod_x = 1;
     
-    if (width > 1) {
+    if (arma_weights[n - 1] == 0) {
+      lambda = 1;
+    } else if (width > 1) {
       lambda = arma_weights[n - 2] / arma_weights[n - 1]; // check already passed
     } else {
       lambda = arma_weights[n - 1];
@@ -647,7 +652,15 @@ struct RollProdOnlineVec {
           
           n_new = n_obs - 1;
           w_new = arma_weights[n - 1];
-          x_new = x[i];
+          
+          if (x[i] == 0) {
+            
+            x_new = 1;
+            n_zero += 1;
+            
+          } else {
+            x_new = x[i];
+          }
           
         }
         
@@ -689,7 +702,15 @@ struct RollProdOnlineVec {
           
           n_new = n_obs - 1;
           w_new = arma_weights[n - 1];
-          x_new = x[i];
+          
+          if (x[i] == 0) {
+            
+            x_new = 1;
+            n_zero += 1;
+            
+          } else {
+            x_new = x[i];
+          }
           
         }
         
@@ -700,8 +721,20 @@ struct RollProdOnlineVec {
           
         } else {
           
-          w_old = arma_weights[n - width];
-          x_old = x[i - width];
+          if (x[i - width] == 0) {
+            
+            x_old = 1;
+            n_zero -= 1;
+            
+          } else {
+            x_old = x[i - width];
+          }
+          
+          if (arma_weights[n - width] == 0) {
+            w_old = 1;
+          } else {
+            w_old = arma_weights[n - width];
+          }
           
         }
         
@@ -723,7 +756,13 @@ struct RollProdOnlineVec {
       if ((!na_restore) || (na_restore && !std::isnan(x[i]))) {
         
         if (n_obs >= min_obs) {
-          arma_prod[i] = prod_w * prod_x;
+          
+          if (n_zero == 0) {
+            arma_prod[i] = prod_w * prod_x;
+          } else {
+            arma_prod[i]= 0;
+          }
+          
         } else {
           arma_prod[i] = NA_REAL;
         }
@@ -1032,26 +1071,26 @@ struct RollMinOnlineVec {
   const arma::vec arma_weights;
   const int min_obs;
   const bool na_restore;
-  arma::vec& arma_min;          // destination (pass by reference)
+  RVector<double> rcpp_min;     // destination (pass by reference)
   
   // initialize with source and destination
   RollMinOnlineVec(const NumericVector x, const int n,
                    const int n_rows_x, const int width,
                    const arma::vec arma_weights, const int min_obs,
-                   const bool na_restore, arma::vec& arma_min)
+                   const bool na_restore, NumericVector rcpp_min)
     : x(x), n(n),
       n_rows_x(n_rows_x), width(width),
       arma_weights(arma_weights), min_obs(min_obs),
-      na_restore(na_restore), arma_min(arma_min) { }
+      na_restore(na_restore), rcpp_min(rcpp_min) { }
   
   // function call operator that iterates by index
   void operator()() {
     
     int n_obs = 0;
-    long double min_x = 0;
+    int idxmin_x = 0;
     std::deque<int> deck(width);
     
-    for (int i = 0; i <= n_rows_x; ++i) {
+    for (int i = 0; i < n_rows_x; i++) {
       
       // expanding window
       if (i < width) {
@@ -1063,7 +1102,7 @@ struct RollMinOnlineVec {
         
         if (!std::isnan(x[i])) {
           
-          while (!deck.empty() && (std::isnan(x[deck.back()]) || (x[i] <= x[deck.back()]))) {
+          while (!deck.empty() && (std::isnan(x[deck.back()]) || (x[i] < x[deck.back()]))) {
             deck.pop_back();
           }
           
@@ -1072,9 +1111,9 @@ struct RollMinOnlineVec {
         }
         
         if (width > 1) {
-          min_x = x[deck.front()];
+          idxmin_x = deck.front();
         } else {
-          min_x = x[i];
+          idxmin_x = i;
         }
         
       }
@@ -1095,7 +1134,7 @@ struct RollMinOnlineVec {
         
         if (!std::isnan(x[i])) {
           
-          while (!deck.empty() && (std::isnan(x[deck.back()]) || (x[i] <= x[deck.back()]))) {
+          while (!deck.empty() && (std::isnan(x[deck.back()]) || (x[i] < x[deck.back()]))) {
             deck.pop_back();
           }
           
@@ -1108,9 +1147,9 @@ struct RollMinOnlineVec {
         }
         
         if (width > 1) {
-          min_x = x[deck.front()];
+          idxmin_x = deck.front();
         } else {
-          min_x = x[i];
+          idxmin_x = i;
         }
         
       }
@@ -1119,15 +1158,15 @@ struct RollMinOnlineVec {
       if ((!na_restore) || (na_restore && !std::isnan(x[i]))) {
         
         if (n_obs >= min_obs) {
-          arma_min[i] = min_x;
+          rcpp_min[i] = x[idxmin_x];
         } else {
-          arma_min[i] = NA_REAL;
+          rcpp_min[i] = NA_REAL;
         }
         
       } else {
         
         // can be either NA or NaN
-        arma_min[i] = x[i];
+        rcpp_min[i] = x[i];
         
       }
       
@@ -1147,17 +1186,17 @@ struct RollMinOfflineVec : public Worker {
   const arma::vec arma_weights;
   const int min_obs;
   const bool na_restore;
-  arma::vec& arma_min;          // destination (pass by reference)
+  RVector<double> rcpp_min;     // destination (pass by reference)
   
   // initialize with source and destination
   RollMinOfflineVec(const NumericVector x, const int n,
                     const int n_rows_x, const int width,
                     const arma::vec arma_weights, const int min_obs,
-                    const bool na_restore, arma::vec& arma_min)
+                    const bool na_restore, NumericVector rcpp_min)
     : x(x), n(n),
       n_rows_x(n_rows_x), width(width),
       arma_weights(arma_weights), min_obs(min_obs),
-      na_restore(na_restore), arma_min(arma_min) { }
+      na_restore(na_restore), rcpp_min(rcpp_min) { }
   
   // function call operator that iterates by index
   void operator()(std::size_t begin_index, std::size_t end_index) {
@@ -1195,15 +1234,15 @@ struct RollMinOfflineVec : public Worker {
         }
         
         if ((n_obs >= min_obs)) {
-          arma_min[i] = x[idxmin_x];
+          rcpp_min[i] = x[idxmin_x];
         } else {
-          arma_min[i] = NA_REAL;
+          rcpp_min[i] = NA_REAL;
         }
         
       } else {
         
         // can be either NA or NaN
-        arma_min[i] = x[i];
+        rcpp_min[i] = x[i];
         
       }
       
@@ -1222,26 +1261,26 @@ struct RollMaxOnlineVec {
   const arma::vec arma_weights;
   const int min_obs;
   const bool na_restore;
-  arma::vec& arma_max;          // destination (pass by reference)
+  RVector<double> rcpp_max;     // destination (pass by reference)
   
   // initialize with source and destination
   RollMaxOnlineVec(const NumericVector x, const int n,
                    const int n_rows_x, const int width,
                    const arma::vec arma_weights, const int min_obs,
-                   const bool na_restore, arma::vec& arma_max)
+                   const bool na_restore, NumericVector rcpp_max)
     : x(x), n(n),
       n_rows_x(n_rows_x), width(width),
       arma_weights(arma_weights), min_obs(min_obs),
-      na_restore(na_restore), arma_max(arma_max) { }
+      na_restore(na_restore), rcpp_max(rcpp_max) { }
   
   // function call operator that iterates by index
   void operator()() {
     
     int n_obs = 0;
-    long double max_x = 0;
+    int idxmax_x = 0;
     std::deque<int> deck(width);
     
-    for (int i = 0; i <= n_rows_x; ++i) {
+    for (int i = 0; i < n_rows_x; i++) {
       
       // expanding window
       if (i < width) {
@@ -1253,7 +1292,7 @@ struct RollMaxOnlineVec {
         
         if (!std::isnan(x[i])) {
           
-          while (!deck.empty() && (std::isnan(x[deck.back()]) || (x[i] >= x[deck.back()]))) {
+          while (!deck.empty() && (std::isnan(x[deck.back()]) || (x[i] > x[deck.back()]))) {
             deck.pop_back();
           }
           
@@ -1262,9 +1301,9 @@ struct RollMaxOnlineVec {
         }
         
         if (width > 1) {
-          max_x = x[deck.front()];
+          idxmax_x = deck.front();
         } else {
-          max_x = x[i];
+          idxmax_x = i;
         }
         
       }
@@ -1285,7 +1324,7 @@ struct RollMaxOnlineVec {
         
         if (!std::isnan(x[i])) {
           
-          while (!deck.empty() && (std::isnan(x[deck.back()]) || (x[i] >= x[deck.back()]))) {
+          while (!deck.empty() && (std::isnan(x[deck.back()]) || (x[i] > x[deck.back()]))) {
             deck.pop_back();
           }
           
@@ -1298,9 +1337,9 @@ struct RollMaxOnlineVec {
         }
         
         if (width > 1) {
-          max_x = x[deck.front()];
+          idxmax_x = deck.front();
         } else {
-          max_x = x[i];
+          idxmax_x = i;
         }
         
       }
@@ -1309,15 +1348,15 @@ struct RollMaxOnlineVec {
       if ((!na_restore) || (na_restore && !std::isnan(x[i]))) {
         
         if (n_obs >= min_obs) {
-          arma_max[i] = max_x;
+          rcpp_max[i] = x[idxmax_x];
         } else {
-          arma_max[i] = NA_REAL;
+          rcpp_max[i] = NA_REAL;
         }
         
       } else {
         
         // can be either NA or NaN
-        arma_max[i] = x[i];
+        rcpp_max[i] = x[i];
         
       }
       
@@ -1337,17 +1376,17 @@ struct RollMaxOfflineVec : public Worker {
   const arma::vec arma_weights;
   const int min_obs;
   const bool na_restore;
-  arma::vec& arma_max;          // destination (pass by reference)
+  RVector<double> rcpp_max;     // destination (pass by reference)
   
   // initialize with source and destination
   RollMaxOfflineVec(const NumericVector x, const int n,
                     const int n_rows_x, const int width,
                     const arma::vec arma_weights, const int min_obs,
-                    const bool na_restore, arma::vec& arma_max)
+                    const bool na_restore, NumericVector rcpp_max)
     : x(x), n(n),
       n_rows_x(n_rows_x), width(width),
       arma_weights(arma_weights), min_obs(min_obs),
-      na_restore(na_restore), arma_max(arma_max) { }
+      na_restore(na_restore), rcpp_max(rcpp_max) { }
   
   // function call operator that iterates by index
   void operator()(std::size_t begin_index, std::size_t end_index) {
@@ -1385,15 +1424,15 @@ struct RollMaxOfflineVec : public Worker {
         }
         
         if ((n_obs >= min_obs)) {
-          arma_max[i] = x[idxmax_x];
+          rcpp_max[i] = x[idxmax_x];
         } else {
-          arma_max[i] = NA_REAL;
+          rcpp_max[i] = NA_REAL;
         }
         
       } else {
         
         // can be either NA or NaN
-        arma_max[i] = x[i];
+        rcpp_max[i] = x[i];
         
       }
       
@@ -1795,26 +1834,29 @@ struct RollIdxMaxOfflineVec : public Worker {
 };
 
 // 'Worker' function for computing the rolling statistic using an offline algorithm
-struct RollMedianOfflineVec : public Worker {
+struct RollQuantileOfflineVec : public Worker {
   
   const RVector<double> x;      // source
   const int n;
   const int n_rows_x;
   const int width;
   const arma::vec arma_weights;
+  const double p;
   const int min_obs;
   const bool na_restore;
-  arma::vec& arma_median;       // destination (pass by reference)
+  RVector<double> rcpp_quantile;// destination (pass by reference)
   
   // initialize with source and destination
-  RollMedianOfflineVec(const NumericVector x, const int n,
-                       const int n_rows_x, const int width,
-                       const arma::vec arma_weights, const int min_obs,
-                       const bool na_restore, arma::vec& arma_median)
+  RollQuantileOfflineVec(const NumericVector x, const int n,
+                         const int n_rows_x, const int width,
+                         const arma::vec arma_weights, const double p, 
+                         const int min_obs, const bool na_restore,
+                         NumericVector rcpp_quantile)
     : x(x), n(n),
       n_rows_x(n_rows_x), width(width),
-      arma_weights(arma_weights), min_obs(min_obs),
-      na_restore(na_restore), arma_median(arma_median) { }
+      arma_weights(arma_weights), p(p),
+      min_obs(min_obs), na_restore(na_restore),
+      rcpp_quantile(rcpp_quantile) { }
   
   // function call operator that iterates by index
   void operator()(std::size_t begin_index, std::size_t end_index) {
@@ -1863,9 +1905,9 @@ struct RollMedianOfflineVec : public Worker {
         
         count = 0;
         int n_obs = 0;
-        int temp_ix = 0;
+        int idxquantile_x = 0;
+        bool status = false;
         long double sum_upper_w = 0;
-        long double sum_upper_x = 0;
         long double sum_upper_w_temp = 0;
         
         // number of observations is either the window size or,
@@ -1877,16 +1919,15 @@ struct RollMedianOfflineVec : public Worker {
           // don't include if missing value
           if (!std::isnan(x_subset[k])) {
             
-            // last element of sorted array that is half of 'weights'
+            sum_upper_w += arma_weights_subset[k];
+            
+            // last element of sorted array that is 'p' of 'weights'
             // note: 'weights' must be greater than 0
-            if (sum_upper_w / sum_w <= 0.5) {
+            if (!status && (sum_upper_w / sum_w >= p)) {
               
-              temp_ix = n_size_x - count - 1;
+              status = true;
+              idxquantile_x = n_size_x - count - 1;
               sum_upper_w_temp = sum_upper_w;
-              
-              // compute the sum
-              sum_upper_w += arma_weights_subset[k];
-              sum_upper_x = x_subset[k];
               
             }
             
@@ -1900,24 +1941,26 @@ struct RollMedianOfflineVec : public Worker {
         
         if ((n_obs >= min_obs)) {
           
+          k = sort_ix[idxquantile_x];
+          
           // average if upper and lower weight is equal
-          if (std::abs(sum_upper_w_temp / sum_w - 0.5) <= sqrt(arma::datum::eps)) {
+          if (std::abs(sum_upper_w_temp / sum_w - p) <= sqrt(arma::datum::eps)) {
             
-            k = sort_ix[temp_ix + 1];
-            arma_median[i] = (x_subset[k] + sum_upper_x) / 2;
+            int k_lower = sort_ix[idxquantile_x - 1];
+            rcpp_quantile[i] = (x_subset[k] + x_subset[k_lower]) / 2;
             
           } else {
-            arma_median[i] = sum_upper_x;
+            rcpp_quantile[i] = x_subset[k];
           }
           
         } else {
-          arma_median[i] = NA_REAL;
+          rcpp_quantile[i] = NA_REAL;
         }
         
       } else {
         
         // can be either NA or NaN
-        arma_median[i] = x[i];
+        rcpp_quantile[i] = x[i];
         
       }
       
@@ -3881,7 +3924,11 @@ struct RollLmVecInterceptFALSE : public Worker {
           
           // r-squared
           long double var_y = sigma(1, 1);
-          arma_rsq[i] = as_scalar(trans_coef * A * coef) / var_y;
+          if ((var_y < 0) || (sqrt(var_y) <= sqrt(arma::datum::eps))) {      
+            arma_rsq[i] = NA_REAL;
+          } else {
+            arma_rsq[i] = as_scalar(trans_coef * A * coef) / var_y;
+          }
           
           // check if matrix is singular
           arma::mat A_inv(1, 1);
@@ -3890,7 +3937,7 @@ struct RollLmVecInterceptFALSE : public Worker {
           
           if (status_inv && (df_resid > 0)) {
             
-            // residual variance
+            // standard errors
             long double var_resid = (1 - arma_rsq[i]) * var_y / df_resid;
             arma_se[i] = as_scalar(sqrt(var_resid * trans(diagvec(A_inv))));
             
