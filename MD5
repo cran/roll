@@ -1,10 +1,10 @@
-6a03c2baf306ea1dbefc8b69278d8fcc *DESCRIPTION
+6126598fe04fdf831071aa59b0bd9f84 *DESCRIPTION
 ce65bfd5b9aa2491cec56dbcd7c662ea *NAMESPACE
 617d4030c592025e416696f904d5cfb9 *NEWS.md
 d0f788eddc8cf8334b596245506eefbb *R/RcppExports.R
 3a4de895dc7882f3385496913f13874d *R/roll.R
 fb0551bf9b0a5acad8f6c34f661c255b *README.md
-dd5fc7790dbacfc9e15424d25dac63a9 *build/partial.rdb
+4030cfa0fafbba23dea85d27d06f3913 *build/partial.rdb
 b50776fc2ebb97bcccd982455dba59c5 *man/figures/logo.png
 c434937ac4badf252ca0140d420fdbc5 *man/roll-package.Rd
 776cf22b4d7e1beade3fc7c8e0dfe76b *man/roll_all.Rd
@@ -29,10 +29,10 @@ bc56d179101d482d2ee53a4ff85a4469 *src/Makevars.win
 e8ce5e04fac6df1ae7298b16a2206e2c *src/RcppExports.cpp
 9a58b1e89815c22bb58d6b1409901ae6 *src/init.c
 0d0e30ce59e382b50024f672de6e98c6 *src/roll.cpp
-a5b6361610486820940ae9402134660b *src/roll_mat.h
-780b228e8dbee648bbdda693b37f711c *src/roll_vec.h
+48dc414ff09580b7021d2680a8e2cb8f *src/roll_mat.h
+0e72dd35a7b3cc4d5f4de06f79487390 *src/roll_vec.h
 16e1345dc9abce3590869d8f07684d51 *tests/testthat.R
 c600c86c1392eb1b48818426e2e74696 *tests/testthat/helper-data.R
 f76df75d0e5ccfafb1669a41f8ae094a *tests/testthat/helper-zoo.R
-261d149bf943f7a03b05dbdbe83f6ee5 *tests/testthat/test-roll.R
+34c21b0b7cbac370b96aeebb4ef138d9 *tests/testthat/test-roll.R
 66af2e30d7446e318ec6e9c00e102b8b *tests/testthat/test-zoo.R
