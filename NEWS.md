@@ -1,5 +1,11 @@
 # roll
 
+## Version 1.2.0
+
+* Implemented efficient algorithms for `roll_median` and `roll_quantile` functions
+
+* Fixed an issue for `weights` argument if single value ([#45](https://github.com/jasonjfoster/roll/issues/45))
+
 ## Version 1.1.7
 
 * New `roll_crossprod` function for computing rolling and expanding crossproducts of time-series data

@@ -16,33 +16,11 @@ void check_width(const int& width) {
   
 }
 
-void check_weights_p(const arma::vec& weights) {
-  
-  int n = weights.size();
-  int any_leq = 0;
-  int i = 0;
-  
-  while ((any_leq == 0) && (i < n)) {
-    
-    if (weights[i] <= 0) {
-      any_leq = 1;
-    }
-    
-    i += 1;
-    
-  }
-  
-  if (any_leq > 0) {
-    stop("values of 'weights' must be greater than zero");
-  }
-  
-}
-
 void check_weights_x(const int& n_rows_x, const int& width,
                      const arma::vec& weights) {
   
   if ((int)weights.size() < std::min(width, n_rows_x)) {
-    stop("length of 'weights' must equal either the number of rows in 'x' or 'width'");
+    stop("length of 'weights' must be greater than or equal to the number of rows in 'x' or 'width'");
   }
   
 }
@@ -51,7 +29,7 @@ void check_weights_xy(const int& n_rows_xy, const int& width,
                       const arma::vec& weights) {
   
   if ((int)weights.size() < std::min(width, n_rows_xy)) {
-    stop("length of 'weights' must equal either the number of rows in 'x' (and 'y', if applicable) or 'width'");
+    stop("length of 'weights' must be greater than or equal to the number of rows in 'x' (and 'y', if applicable) or 'width'");
   }
   
 }
@@ -60,7 +38,7 @@ void check_weights_lm(const int& n_rows_xy, const int& width,
                       const arma::vec& weights) {
   
   if ((int)weights.size() < std::min(width, n_rows_xy)) {
-    stop("length of 'weights' must equal either the number of rows in 'x' (and 'y') or 'width'");
+    stop("length of 'weights' must greater than or equal to the number of rows in 'x' (and 'y') or 'width'");
   }
   
 }
@@ -75,13 +53,12 @@ bool check_lambda(const arma::vec& weights, const int& n_rows_x,
   // check if exponential-weights
   if (!status_eq) {
     
-    int i = 0;
     int n = weights.size();
     long double lambda = 0;
     long double lambda_prev = 0;
     
     // check if constant ratio
-    while (status_exp && (i <= (n - 2))) {
+    for (int i = 0; (i < n - 1) && status_exp; i++) {
       
       // ratio of weights
       lambda_prev = lambda;
@@ -95,8 +72,6 @@ bool check_lambda(const arma::vec& weights, const int& n_rows_x,
         status_exp = false;
         
       }
-      
-      i += 1;
       
     }
     
@@ -129,46 +104,51 @@ void check_lm(const int& n_rows_x, const int& n_rows_y) {
 List dimnames_lm_x(const List& input, const int& n_cols_x,
                    const bool& intercept) {
   
-  if (intercept && (input.size() > 1)) {
+  CharacterVector result(n_cols_x);
+  
+  if (input.size() > 1) {
     
     CharacterVector dimnames_cols = input[1];
-    CharacterVector result(n_cols_x);
-    result(0) = "(Intercept)";
     
-    std::copy(dimnames_cols.begin(), dimnames_cols.end(), result.begin() + 1);
-    
-    return List::create(input[0], result);
-    
-  } else if (!intercept && (input.size() > 1)) {
-    
-    return List::create(input[0], input[1]);
-    
-  } else if (intercept) {
-    
-    CharacterVector result(n_cols_x);
-    result(0) = "(Intercept)";
-    
-    for (int i = 1; i < n_cols_x; i++) {
+    if (intercept) {
+
+      result(0) = "(Intercept)";
       
-      result[i] = "x";
-      result[i] += i;
+      std::copy(dimnames_cols.begin(), dimnames_cols.end(), result.begin() + 1);
       
+      return List::create(input[0], result);
+      
+    } else {
+      return List::create(input[0], dimnames_cols);
     }
-    
-    return List::create(R_NilValue, result);
     
   } else {
     
-    CharacterVector result(n_cols_x);
-    
-    for (int i = 0; i < n_cols_x; i++) {
+    if (intercept) {
       
-      result[i] = "x";
-      result[i] += i + 1;
+      result(0) = "(Intercept)";
+      
+      for (int i = 1; i < n_cols_x; i++) {
+        
+        result[i] = "x";
+        result[i] += i;
+        
+      }
+      
+      return List::create(R_NilValue, result);
+      
+    } else {
+      
+      for (int i = 0; i < n_cols_x; i++) {
+        
+        result[i] = "x";
+        result[i] += i + 1;
+        
+      }
+      
+      return List::create(R_NilValue, result);
       
     }
-    
-    return List::create(R_NilValue, result);
     
   }
   
@@ -197,22 +177,20 @@ CharacterVector dimnames_lm_y(const List& input, const int& n_cols_y) {
   
 }
 
-IntegerVector any_na_i(const IntegerMatrix& x) {
+arma::uvec any_na_i(const IntegerMatrix& x) {
   
   int n_rows_x = x.nrow();
   int n_cols_x = x.ncol();
-  IntegerVector result(n_rows_x);
+  arma::uvec result(n_rows_x);
   
   for (int i = 0; i < n_rows_x; i++) {
     
     int any_na = 0;
-    int j = 0;
     
-    while ((any_na == 0) && (j < n_cols_x)) {
+    for (int j = 0; (j < n_cols_x) && (any_na == 0); j++) {
       if (x(i, j) == NA_INTEGER) {
         any_na = 1;
       }
-      j += 1;
     }
     
     result[i] = any_na;
@@ -232,13 +210,11 @@ arma::uvec any_na_x(const NumericMatrix& x) {
   for (int i = 0; i < n_rows_x; i++) {
     
     int any_na = 0;
-    int j = 0;
     
-    while ((any_na == 0) && (j < n_cols_x)) {
+    for (int j = 0; (j < n_cols_x) && (any_na == 0); j++) {
       if (std::isnan(x(i, j))) {
         any_na = 1;
       }
-      j += 1;
     }
     
     result[i] = any_na;
@@ -259,21 +235,17 @@ arma::uvec any_na_xy(const NumericMatrix& x, const NumericMatrix& y) {
   for (int i = 0; i < n_rows_xy; i++) {
     
     int any_na = 0;
-    int j = 0;
-    int k = 0;
     
-    while ((any_na == 0) && (j < n_cols_x)) {
+    for (int j = 0; (j < n_cols_x) && (any_na == 0); j++) {
       if (std::isnan(x(i, j))) {
         any_na = 1;
       }
-      j += 1;
     }
     
-    while ((any_na == 0) && (k < n_cols_y)) {
+    for (int k = 0; (k < n_cols_y) && (any_na == 0); k++) {
       if (std::isnan(y(i, k))) {
         any_na = 1;
       }
-      k += 1;
     }
     
     result[i] = any_na;
@@ -284,24 +256,6 @@ arma::uvec any_na_xy(const NumericMatrix& x, const NumericMatrix& y) {
   
 }
 
-arma::ivec stl_sort_index(arma::vec& x) {
-  
-  int n_rows_x = x.size();
-  arma::ivec y(n_rows_x);
-  std::iota(y.begin(), y.end(), 0);
-  
-  auto comparator = [&x](int a, int b) {
-    if (std::isnan(x[a])) return false;
-    if (std::isnan(x[b])) return true;
-    return x[a] < x[b];
-  };
-  
-  std::sort(y.begin(), y.end(), comparator);
-  
-  return y;
-  
-}
-
 // [[Rcpp::export(.roll_any)]]
 SEXP roll_any(const SEXP& x, const int& width,
               const int& min_obs, const bool& complete_obs,
@@ -309,11 +263,10 @@ SEXP roll_any(const SEXP& x, const int& width,
   
   if (Rf_isMatrix(x)) {
     
-    LogicalMatrix xx(x);
+    IntegerMatrix xx(x); // RMatrix<bool> is not supported
     int n_rows_x = xx.nrow();
     int n_cols_x = xx.ncol();
-    IntegerVector rcpp_any_na(n_rows_x);
-    IntegerMatrix rcpp_x(xx);
+    arma::uvec arma_any_na(n_rows_x);
     IntegerMatrix rcpp_any(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
@@ -326,21 +279,23 @@ SEXP roll_any(const SEXP& x, const int& width,
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
     if (complete_obs) {
-      rcpp_any_na = any_na_i(rcpp_x);
+      arma_any_na = any_na_i(x);
+    } else {
+      arma_any_na.fill(0);
     }
     
     // compute rolling any
     if (online) {
       
-      roll::RollAnyOnlineMat roll_any_online(rcpp_x, n_rows_x, n_cols_x, width,
-                                             min_obs, rcpp_any_na, na_restore,
+      roll::RollAnyOnlineMat roll_any_online(xx, n_rows_x, n_cols_x, width,
+                                             min_obs, arma_any_na, na_restore,
                                              rcpp_any);
       parallelFor(0, n_cols_x, roll_any_online);
       
     } else {
       
-      roll::RollAnyOfflineMat roll_any_offline(rcpp_x, n_rows_x, n_cols_x, width,
-                                               min_obs, rcpp_any_na, na_restore,
+      roll::RollAnyOfflineMat roll_any_offline(xx, n_rows_x, n_cols_x, width,
+                                               min_obs, arma_any_na, na_restore,
                                                rcpp_any);
       parallelFor(0, n_rows_x * n_cols_x, roll_any_offline);
       
@@ -413,11 +368,10 @@ SEXP roll_all(const SEXP& x, const int& width,
   
   if (Rf_isMatrix(x)) {
     
-    LogicalMatrix xx(x);
+    IntegerMatrix xx(x); // RMatrix<bool> is not supported
     int n_rows_x = xx.nrow();
     int n_cols_x = xx.ncol();
-    IntegerVector rcpp_any_na(n_rows_x);
-    IntegerMatrix rcpp_x(xx);
+    arma::uvec arma_any_na(n_rows_x);
     IntegerMatrix rcpp_all(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
@@ -430,21 +384,23 @@ SEXP roll_all(const SEXP& x, const int& width,
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
     if (complete_obs) {
-      rcpp_any_na = any_na_i(rcpp_x);
+      arma_any_na = any_na_i(x);
+    } else {
+      arma_any_na.fill(0);
     }
     
     // compute rolling all
     if (online) {
       
-      roll::RollAllOnlineMat roll_all_online(rcpp_x, n_rows_x, n_cols_x, width,
-                                             min_obs, rcpp_any_na, na_restore,
+      roll::RollAllOnlineMat roll_all_online(xx, n_rows_x, n_cols_x, width,
+                                             min_obs, arma_any_na, na_restore,
                                              rcpp_all);
       parallelFor(0, n_cols_x, roll_all_online);
       
     } else {
       
-      roll::RollAllOfflineMat roll_all_offline(rcpp_x, n_rows_x, n_cols_x, width,
-                                               min_obs, rcpp_any_na, na_restore,
+      roll::RollAllOfflineMat roll_all_offline(xx, n_rows_x, n_cols_x, width,
+                                               min_obs, arma_any_na, na_restore,
                                                rcpp_all);
       parallelFor(0, n_rows_x * n_cols_x, roll_all_offline);
       
@@ -885,15 +841,15 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     int n = weights.size();
     int n_rows_x = xx.nrow();
     int n_cols_x = xx.ncol();
-    IntegerVector rcpp_any_na(n_rows_x);
-    IntegerMatrix rcpp_idxquantile(n_rows_x, n_cols_x);
+    arma::uvec arma_any_na(n_rows_x);
+    arma::imat arma_idxquantile(n_rows_x, n_cols_x); // unsigned int coerce NA to int
     
     // check 'width' argument for errors
     check_width(width);
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_p(weights);
+    check_weights_x(n_rows_x, width, weights);
     
     // check 'p' argument for errors
     check_p(p);
@@ -905,9 +861,9 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
     if (complete_obs) {
-      rcpp_any_na = any_na_x(xx);
+      arma_any_na = any_na_x(xx);
     } else {
-      rcpp_any_na.fill(0);
+      arma_any_na.fill(0);
     }
     
     // compute rolling index of quantiles
@@ -917,16 +873,16 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
         
         roll::RollIdxMinOnlineMat roll_idxmin_online(xx, n, n_rows_x, n_cols_x, width,
                                                      weights, min_obs,
-                                                     rcpp_any_na, na_restore,
-                                                     rcpp_idxquantile);
+                                                     arma_any_na, na_restore,
+                                                     arma_idxquantile);
         parallelFor(0, n_cols_x, roll_idxmin_online);
         
       } else if (p == 1) {
         
         roll::RollIdxMaxOnlineMat roll_idxmax_online(xx, n, n_rows_x, n_cols_x, width,
                                                      weights, min_obs,
-                                                     rcpp_any_na, na_restore,
-                                                     rcpp_idxquantile);
+                                                     arma_any_na, na_restore,
+                                                     arma_idxquantile);
         parallelFor(0, n_cols_x, roll_idxmax_online);
         
       }
@@ -937,16 +893,16 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
         
         roll::RollIdxMinOfflineMat roll_idxmin_offline(xx, n, n_rows_x, n_cols_x, width,
                                                        weights, min_obs,
-                                                       rcpp_any_na, na_restore,
-                                                       rcpp_idxquantile);
+                                                       arma_any_na, na_restore,
+                                                       arma_idxquantile);
         parallelFor(0, n_rows_x * n_cols_x, roll_idxmin_offline);
         
       } else if (p == 1) {
         
         roll::RollIdxMaxOfflineMat roll_idxmax_offline(xx, n, n_rows_x, n_cols_x, width,
                                                        weights, min_obs,
-                                                       rcpp_any_na, na_restore,
-                                                       rcpp_idxquantile);
+                                                       arma_any_na, na_restore,
+                                                       arma_idxquantile);
         parallelFor(0, n_rows_x * n_cols_x, roll_idxmax_offline);
         
       }
@@ -954,7 +910,7 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     }
     
     // create and return a matrix or xts object
-    IntegerMatrix result(rcpp_idxquantile);
+    IntegerMatrix result(wrap(arma_idxquantile));
     List dimnames = xx.attr("dimnames");
     result.attr("dimnames") = dimnames;
     result.attr("index") = xx.attr("index");
@@ -971,14 +927,14 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     NumericVector xx(x);
     int n = weights.size();
     int n_rows_x = xx.size();
-    IntegerVector rcpp_idxquantile(n_rows_x);
+    arma::ivec arma_idxquantile(n_rows_x); // unsigned int coerce NA to int
     
     // check 'width' argument for errors
     check_width(width);
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_p(weights);
+    check_weights_x(n_rows_x, width, weights);
     
     // check 'p' argument for errors
     check_p(p);
@@ -995,7 +951,7 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
         roll::RollIdxMinOnlineVec roll_idxmin_online(xx, n, n_rows_x, width,
                                                      weights, min_obs,
                                                      na_restore,
-                                                     rcpp_idxquantile);
+                                                     arma_idxquantile);
         roll_idxmin_online();
         
       } else if (p == 1) {
@@ -1003,7 +959,7 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
         roll::RollIdxMaxOnlineVec roll_idxmax_online(xx, n, n_rows_x, width,
                                                      weights, min_obs,
                                                      na_restore,
-                                                     rcpp_idxquantile);
+                                                     arma_idxquantile);
         roll_idxmax_online();
         
       }
@@ -1015,7 +971,7 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
         roll::RollIdxMinOfflineVec roll_idxmin_offline(xx, n, n_rows_x, width,
                                                        weights, min_obs,
                                                        na_restore,
-                                                       rcpp_idxquantile);
+                                                       arma_idxquantile);
         parallelFor(0, n_rows_x, roll_idxmin_offline);
         
       } else if (p == 1) {
@@ -1023,7 +979,7 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
         roll::RollIdxMaxOfflineVec roll_idxmax_offline(xx, n, n_rows_x, width,
                                                        weights, min_obs,
                                                        na_restore,
-                                                       rcpp_idxquantile);
+                                                       arma_idxquantile);
         parallelFor(0, n_rows_x, roll_idxmax_offline);
         
       }
@@ -1031,7 +987,7 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     }
     
     // create and return a vector object
-    IntegerVector result(rcpp_idxquantile);
+    IntegerVector result(wrap(arma_idxquantile));
     result.attr("dim") = R_NilValue;
     List names = xx.attr("names");
     if (names.size() > 0) {
@@ -1059,14 +1015,14 @@ SEXP roll_quantile(const SEXP& x, const int& width,
     int n_rows_x = xx.nrow();
     int n_cols_x = xx.ncol();
     arma::uvec arma_any_na(n_rows_x);
-    NumericMatrix rcpp_quantile(n_rows_x, n_cols_x);
+    arma::mat arma_quantile(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
     check_width(width);
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_p(weights);
+    check_weights_x(n_rows_x, width, weights);
     
     // check 'p' argument for errors
     check_p(p);
@@ -1091,7 +1047,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollMinOnlineMat roll_min_online(xx, n, n_rows_x, n_cols_x, width,
                                                weights, min_obs,
                                                arma_any_na, na_restore,
-                                               rcpp_quantile);
+                                               arma_quantile);
         parallelFor(0, n_cols_x, roll_min_online);
         
       } else if (p == 1) {
@@ -1099,17 +1055,20 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollMaxOnlineMat roll_max_online(xx, n, n_rows_x, n_cols_x, width,
                                                weights, min_obs,
                                                arma_any_na, na_restore,
-                                               rcpp_quantile);
+                                               arma_quantile);
         parallelFor(0, n_cols_x, roll_max_online);
         
       } else {
         
-        warning("'online' is not supported");
-        roll::RollQuantileOfflineMat roll_quantile_offline(xx, n, n_rows_x, n_cols_x, width,
-                                                           weights, 1 - p, min_obs,
-                                                           arma_any_na, na_restore,
-                                                           rcpp_quantile);
-        parallelFor(0, n_rows_x * n_cols_x, roll_quantile_offline);
+        if (any(weights != weights[0])) {
+          stop("'online' is only supported for equal 'weights'");
+        }
+        
+        roll::RollQuantileOnlineMat roll_quantile_online(xx, n, n_rows_x, n_cols_x, width,
+                                                         weights, p, min_obs,
+                                                         arma_any_na, na_restore,
+                                                         arma_quantile);
+        parallelFor(0, n_cols_x, roll_quantile_online);
         
       }
       
@@ -1120,7 +1079,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollMinOfflineMat roll_min_offline(xx, n, n_rows_x, n_cols_x, width,
                                                  weights, min_obs,
                                                  arma_any_na, na_restore,
-                                                 rcpp_quantile);
+                                                 arma_quantile);
         parallelFor(0, n_rows_x * n_cols_x, roll_min_offline);
         
       } else if (p == 1) {
@@ -1128,7 +1087,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollMaxOfflineMat roll_max_offline(xx, n, n_rows_x, n_cols_x, width,
                                                  weights, min_obs,
                                                  arma_any_na, na_restore,
-                                                 rcpp_quantile);
+                                                 arma_quantile);
         parallelFor(0, n_rows_x * n_cols_x, roll_max_offline);
         
       } else {
@@ -1136,7 +1095,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollQuantileOfflineMat roll_quantile_offline(xx, n, n_rows_x, n_cols_x, width,
                                                            weights, 1 - p, min_obs,
                                                            arma_any_na, na_restore,
-                                                           rcpp_quantile);
+                                                           arma_quantile);
         parallelFor(0, n_rows_x * n_cols_x, roll_quantile_offline);
         
       }
@@ -1144,7 +1103,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
     }
     
     // create and return a matrix or xts object
-    NumericMatrix result(rcpp_quantile);
+    NumericMatrix result(wrap(arma_quantile));
     List dimnames = xx.attr("dimnames");
     result.attr("dimnames") = dimnames;
     result.attr("index") = xx.attr("index");
@@ -1161,14 +1120,14 @@ SEXP roll_quantile(const SEXP& x, const int& width,
     NumericVector xx(x);
     int n = weights.size();
     int n_rows_x = xx.size();
-    NumericVector rcpp_quantile(n_rows_x);
+    arma::vec arma_quantile(n_rows_x);
     
     // check 'width' argument for errors
     check_width(width);
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_p(weights);
+    check_weights_x(n_rows_x, width, weights);
     
     // check 'p' argument for errors
     check_p(p);
@@ -1185,7 +1144,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollMinOnlineVec roll_min_online(xx, n, n_rows_x, width,
                                                weights, min_obs,
                                                na_restore,
-                                               rcpp_quantile);
+                                               arma_quantile);
         roll_min_online();
         
       } else if (p == 1) {
@@ -1193,17 +1152,20 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollMaxOnlineVec roll_max_online(xx, n, n_rows_x, width,
                                                weights, min_obs,
                                                na_restore,
-                                               rcpp_quantile);
+                                               arma_quantile);
         roll_max_online();
         
       } else {
         
-        warning("'online' is not supported"); 
-        roll::RollQuantileOfflineVec roll_quantile_offline(xx, n, n_rows_x, width,
-                                                           weights, 1 - p, min_obs,
-                                                           na_restore,
-                                                           rcpp_quantile);
-        parallelFor(0, n_rows_x, roll_quantile_offline);
+        if (any(weights != weights[0])) {
+          stop("'online' is only supported for equal 'weights'");
+        }
+        
+        roll::RollQuantileOnlineVec roll_quantile_online(xx, n, n_rows_x, width,
+                                                         weights, p, min_obs,
+                                                         na_restore,
+                                                         arma_quantile);
+        roll_quantile_online();
         
       }
       
@@ -1214,7 +1176,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollMinOfflineVec roll_min_offline(xx, n, n_rows_x, width,
                                                  weights, min_obs,
                                                  na_restore,
-                                                 rcpp_quantile);
+                                                 arma_quantile);
         parallelFor(0, n_rows_x, roll_min_offline);
         
       } else if (p == 1) {
@@ -1222,7 +1184,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollMaxOfflineVec roll_max_offline(xx, n, n_rows_x, width,
                                                  weights, min_obs,
                                                  na_restore,
-                                                 rcpp_quantile);
+                                                 arma_quantile);
         parallelFor(0, n_rows_x, roll_max_offline);
         
       } else {
@@ -1230,15 +1192,14 @@ SEXP roll_quantile(const SEXP& x, const int& width,
         roll::RollQuantileOfflineVec roll_quantile_offline(xx, n, n_rows_x, width,
                                                            weights, 1 - p, min_obs,
                                                            na_restore,
-                                                           rcpp_quantile);
+                                                           arma_quantile);
         parallelFor(0, n_rows_x, roll_quantile_offline);
         
       }
       
     }
-    
-    // create and return a vector object
-    NumericVector result(rcpp_quantile);
+      
+    NumericVector result(wrap(arma_quantile));
     result.attr("dim") = R_NilValue;
     List names = xx.attr("names");
     if (names.size() > 0) {
