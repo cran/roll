@@ -2262,6 +2262,7 @@ struct RollVarOnlineMat : public Worker {
       long double sumsq_x = 0;
       long double mean_prev_x = 0;
       long double mean_x = 0;
+      long double var_x = 0;
       
       for (int i = 0; i < n_rows_x; i++) {
         
@@ -2372,11 +2373,21 @@ struct RollVarOnlineMat : public Worker {
           
         }
         
+        var_x = sumsq_x / (sum_w - sumsq_w / sum_w);
+        
         // don't compute if missing value and 'na_restore' argument is TRUE
         if (!na_restore || !std::isnan(x(i, j))) {
           
           if ((n_obs > 1) && (n_obs >= min_obs)) {
-            arma_var(i, j) = sumsq_x / (sum_w - sumsq_w / sum_w);
+            
+            if (var_x > arma::datum::eps) {
+              arma_var(i, j) = var_x;
+            } else if (var_x > -arma::datum::eps) {
+              arma_var(i, j) = 0;
+            } else { 
+              arma_var(i, j) = NA_REAL;
+            }
+            
           } else {
             arma_var(i, j) = NA_REAL;
           }
@@ -2430,6 +2441,7 @@ struct RollVarOfflineMat : public Worker {
       // from 1D to 2D array
       int i = z / n_cols_x;
       int j = z % n_cols_x;
+      long double var_x = 0;
       
       // don't compute if missing value and 'na_restore' argument is TRUE
       if (!na_restore || !std::isnan(x(i, j))) {
@@ -2502,8 +2514,18 @@ struct RollVarOfflineMat : public Worker {
           
         }
         
+        var_x = sumsq_x / (sum_w - sumsq_w / sum_w);
+        
         if ((n_obs > 1) && (n_obs >= min_obs)) {
-          arma_var(i, j) = sumsq_x / (sum_w - sumsq_w / sum_w);
+          
+          if (var_x > arma::datum::eps) {
+            arma_var(i, j) = var_x;
+          } else if (var_x > -arma::datum::eps) {
+            arma_var(i, j) = 0;
+          } else { 
+            arma_var(i, j) = NA_REAL;
+          }
+          
         } else {
           arma_var(i, j) = NA_REAL;
         }
@@ -2568,6 +2590,7 @@ struct RollSdOnlineMat : public Worker {
       long double sumsq_x = 0;
       long double mean_prev_x = 0;
       long double mean_x = 0;
+      long double var_x = 0;
       
       for (int i = 0; i < n_rows_x; i++) {
         
@@ -2680,11 +2703,21 @@ struct RollSdOnlineMat : public Worker {
           
         }
         
+        var_x = sumsq_x / (sum_w - sumsq_w / sum_w);
+        
         // don't compute if missing value and 'na_restore' argument is TRUE
         if (!na_restore || !std::isnan(x(i, j))) {
           
           if ((n_obs > 1) && (n_obs >= min_obs)) {
-            arma_sd(i, j) = sqrt(sumsq_x / (sum_w - sumsq_w / sum_w));
+            
+            if (var_x > arma::datum::eps) {
+              arma_sd(i, j) = sqrt(var_x);
+            } else if (var_x > -arma::datum::eps) {
+              arma_sd(i, j) = 0;
+            } else { 
+              arma_sd(i, j) = NA_REAL;
+            }
+            
           } else {
             arma_sd(i, j) = NA_REAL;
           }
@@ -2739,6 +2772,7 @@ struct RollSdOfflineMat : public Worker {
       // from 1D to 2D array
       int i = z / n_cols_x;
       int j = z % n_cols_x;
+      long double var_x = 0;
       
       // don't compute if missing value and 'na_restore' argument is TRUE
       if (!na_restore || !std::isnan(x(i, j))) {
@@ -2811,8 +2845,18 @@ struct RollSdOfflineMat : public Worker {
           
         }
         
+        var_x = sumsq_x / (sum_w - sumsq_w / sum_w);
+        
         if ((n_obs > 1) && (n_obs >= min_obs)) {
-          arma_sd(i, j) = sqrt(sumsq_x / (sum_w - sumsq_w / sum_w));
+          
+          if (var_x > arma::datum::eps) {
+            arma_sd(i, j) = sqrt(var_x);
+          } else if (var_x > -arma::datum::eps) {
+            arma_sd(i, j) = 0;
+          } else { 
+            arma_sd(i, j) = NA_REAL;
+          }
+          
         } else {
           arma_sd(i, j) = NA_REAL;
         }
@@ -3054,16 +3098,14 @@ struct RollScaleOnlineMat : public Worker {
             if (scale) {
               
               // don't divide if negative or sqrt is zero
-              if (n_obs == 1) {
-                arma_scale(i, j) = NA_REAL;
-              } else if (var_x < 0){
-                arma_scale(i, j) = NA_REAL;
-              } else if (sqrt(var_x) <= sqrt(arma::datum::eps)) {
-                arma_scale(i, j) = NA_REAL;
-              } else if (center) {
-                arma_scale(i, j) = (x_first - mean_x) / sqrt(var_x);
+              if ((n_obs > 1) && (var_x > arma::datum::eps)) {
+                if (center) {
+                  arma_scale(i, j) = (x_first - mean_x) / sqrt(var_x);
+                } else {
+                  arma_scale(i, j) = x_first / sqrt(var_x);
+                }
               } else {
-                arma_scale(i, j) = x_first / sqrt(var_x);
+                arma_scale(i, j) = NA_REAL;
               }
               
             } else {
@@ -3234,16 +3276,14 @@ struct RollScaleOfflineMat : public Worker {
           if (scale) {
             
             // don't divide if negative or sqrt is zero
-            if (n_obs == 1) {
-              arma_scale(i, j) = NA_REAL;
-            } else if (var_x < 0){
-              arma_scale(i, j) = NA_REAL;
-            } else if (sqrt(var_x) <= sqrt(arma::datum::eps)) {
-              arma_scale(i, j) = NA_REAL;
-            } else if (center) {
-              arma_scale(i, j) = (x_first - mean_x) / sqrt(var_x);
+            if ((n_obs > 1) && (var_x > arma::datum::eps)) {
+              if (center) {
+                arma_scale(i, j) = (x_first - mean_x) / sqrt(var_x);
+              } else {
+                arma_scale(i, j) = x_first / sqrt(var_x);
+              }
             } else {
-              arma_scale(i, j) = x_first / sqrt(var_x);
+              arma_scale(i, j) = NA_REAL;
             }
             
           } else {
@@ -3579,12 +3619,10 @@ struct RollCovOnlineMatXX : public Worker {
                 // }
                 
                 // don't divide if negative or sqrt is zero
-                if ((sumsq_x < 0) || (sumsq_y < 0)) {
-                  arma_cov(j, k, i) = NA_REAL;
-                } else if ((sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
-                  arma_cov(j, k, i) = NA_REAL;
-                } else {
+                if ((sumsq_x > arma::datum::eps) && (sumsq_y > arma::datum::eps)) {
                   arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
+                } else {
+                  arma_cov(j, k, i) = NA_REAL;
                 }
                 
               } else if (!scale) {
@@ -3929,12 +3967,10 @@ struct RollCovOnlineMatXY : public Worker {
                 // }
                 
                 // don't divide if negative or sqrt is zero
-                if ((sumsq_x < 0) || (sumsq_y < 0)) {
-                  arma_cov(j, k, i) = NA_REAL;
-                } else if ((sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
-                  arma_cov(j, k, i) = NA_REAL;
-                } else {
+                if ((sumsq_x > arma::datum::eps) && (sumsq_y > arma::datum::eps)) {
                   arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
+                } else {
+                  arma_cov(j, k, i) = NA_REAL;
                 }
                 
               } else if (!scale) {
@@ -4128,12 +4164,10 @@ struct RollCovOfflineMatXX : public Worker {
             // }
             
             // don't divide if negative or sqrt is zero
-            if ((sumsq_x < 0) || (sumsq_y < 0)) {
-              arma_cov(j, k, i) = NA_REAL;
-            } else if ((sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
-              arma_cov(j, k, i) = NA_REAL;
-            } else {
+            if ((sumsq_x > arma::datum::eps) && (sumsq_y > arma::datum::eps)) {
               arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
+            } else {
+              arma_cov(j, k, i) = NA_REAL;
             }
             
           } else if (!scale) {
@@ -4330,12 +4364,10 @@ struct RollCovOfflineMatXY : public Worker {
             // }
             
             // don't divide if negative or sqrt is zero
-            if ((sumsq_x < 0) || (sumsq_y < 0)) {
-              arma_cov(j, k, i) = NA_REAL;
-            } else if ((sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
-              arma_cov(j, k, i) = NA_REAL;
-            } else {
+            if ((sumsq_x > arma::datum::eps) && (sumsq_y > arma::datum::eps)) {
               arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
+            } else {
+              arma_cov(j, k, i) = NA_REAL;
             }
             
           } else if (!scale) {
@@ -4684,12 +4716,10 @@ struct RollCrossProdOnlineMatXX : public Worker {
                 // }
                 
                 // don't divide if negative or sqrt is zero
-                if ((sumsq_x < 0) || (sumsq_y < 0)) {
-                  arma_cov(j, k, i) = NA_REAL;
-                } else if ((sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
-                  arma_cov(j, k, i) = NA_REAL;
-                } else {
+                if ((sumsq_x > arma::datum::eps) && (sumsq_y > arma::datum::eps)) {
                   arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
+                } else {
+                  arma_cov(j, k, i) = NA_REAL;
                 }
                 
               } else if (!scale) {
@@ -5028,12 +5058,10 @@ struct RollCrossProdOnlineMatXY : public Worker {
                 // }
                 
                 // don't divide if negative or sqrt is zero
-                if ((sumsq_x < 0) || (sumsq_y < 0)) {
-                  arma_cov(j, k, i) = NA_REAL;
-                } else if ((sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
-                  arma_cov(j, k, i) = NA_REAL;
-                } else {
+                if ((sumsq_x > arma::datum::eps) && (sumsq_y > arma::datum::eps)) {
                   arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
+                } else {
+                  arma_cov(j, k, i) = NA_REAL;
                 }
                 
               } else if (!scale) {
@@ -5250,12 +5278,10 @@ struct RollCrossProdOfflineMatXX : public Worker {
             // }
             
             // don't divide if negative or sqrt is zero
-            if ((sumsq_x < 0) || (sumsq_y < 0)) {
-              arma_cov(j, k, i) = NA_REAL;
-            } else if ((sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
-              arma_cov(j, k, i) = NA_REAL;
-            } else {
+            if ((sumsq_x > arma::datum::eps) && (sumsq_y > arma::datum::eps)) {
               arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
+            } else {
+              arma_cov(j, k, i) = NA_REAL;
             }
             
           } else if (!scale) {
@@ -5453,12 +5479,10 @@ struct RollCrossProdOfflineMatXY : public Worker {
             // }
             
             // don't divide if negative or sqrt is zero
-            if ((sumsq_x < 0) || (sumsq_y < 0)) {
-              arma_cov(j, k, i) = NA_REAL;
-            } else if ((sqrt(sumsq_x) <= sqrt(arma::datum::eps)) || (sqrt(sumsq_y) <= sqrt(arma::datum::eps))) {
-              arma_cov(j, k, i) = NA_REAL;
-            } else {
+            if ((sumsq_x > arma::datum::eps) && (sumsq_y > arma::datum::eps)) {
               arma_cov(j, k, i) = sumsq_xy / (sqrt(sumsq_x) * sqrt(sumsq_y));
+            } else {
+              arma_cov(j, k, i) = NA_REAL;
             }
             
           } else if (!scale) {
@@ -5518,7 +5542,6 @@ struct RollLmMatInterceptTRUE : public Worker {
   void operator()(std::size_t begin_slice, std::size_t end_slice) {
     for (std::size_t i = begin_slice; i < end_slice; i++) {
       
-      arma::rowvec no_solution(n_cols_x, arma::fill::value(NA_REAL));
       arma::mat sigma = arma_cov.slice(i);
       arma::mat A = sigma.submat(0, 0, n_cols_x - 2, n_cols_x - 2);
       arma::mat b = sigma.submat(0, n_cols_x - 1, n_cols_x - 2, n_cols_x - 1);
@@ -5550,12 +5573,10 @@ struct RollLmMatInterceptTRUE : public Worker {
           long double var_y = sigma(n_cols_x - 1, n_cols_x - 1);
           
           // don't divide if negative or sqrt is zero
-          if (var_y < 0) {
-            arma_rsq[i] = NA_REAL;
-          } if (sqrt(var_y) <= sqrt(arma::datum::eps)) {      
-            arma_rsq[i] = NA_REAL;
-          } else {
+          if (var_y > arma::datum::eps) {
             arma_rsq[i] = arma::dot(coef, A * coef) / var_y;
+          } else {      
+            arma_rsq[i] = NA_REAL;
           }
           
           int df_resid = arma_n_obs[i] - n_cols_x;
@@ -5574,22 +5595,22 @@ struct RollLmMatInterceptTRUE : public Worker {
             arma_se.submat(i, 1, i, n_cols_x - 1) = sqrt(var_resid * trans(diagvec(A_inv_diag)));
             
           } else {
-            arma_se.row(i) = no_solution;
+            arma_se.row(i).fill(NA_REAL);
           }
           
         } else {
           
-          arma_coef.row(i) = no_solution;
+          arma_coef.row(i).fill(NA_REAL);
           arma_rsq[i] = NA_REAL;
-          arma_se.row(i) = no_solution;
+          arma_se.row(i).fill(NA_REAL);
           
         }
         
       } else {
         
-        arma_coef.row(i) = no_solution;
+        arma_coef.row(i).fill(NA_REAL);
         arma_rsq[i] = NA_REAL;
-        arma_se.row(i) = no_solution;
+        arma_se.row(i).fill(NA_REAL);
         
       }
       
@@ -5628,7 +5649,6 @@ struct RollLmMatInterceptFALSE : public Worker {
   void operator()(std::size_t begin_slice, std::size_t end_slice) {
     for (std::size_t i = begin_slice; i < end_slice; i++) {
       
-      arma::rowvec no_solution(n_cols_x - 1, arma::fill::value(NA_REAL));
       arma::mat sigma = arma_cov.slice(i);
       arma::mat A = sigma.submat(0, 0, n_cols_x - 2, n_cols_x - 2);
       arma::mat b = sigma.submat(0, n_cols_x - 1, n_cols_x - 2, n_cols_x - 1);
@@ -5656,12 +5676,10 @@ struct RollLmMatInterceptFALSE : public Worker {
           long double var_y = sigma(n_cols_x - 1, n_cols_x - 1);
           
           // don't divide if negative or sqrt is zero
-          if (var_y < 0) {
-            arma_rsq[i] = NA_REAL;          
-          } else if (sqrt(var_y) <= sqrt(arma::datum::eps)) {      
+          if (var_y > arma::datum::eps) {
+            arma_rsq[i] = arma::dot(coef, A * coef) / var_y;      
+          } else {      
             arma_rsq[i] = NA_REAL;
-          } else {
-            arma_rsq[i] = arma::dot(coef, A * coef) / var_y;
           }
           
           int df_resid = arma_n_obs[i] - n_cols_x + 1;
@@ -5678,22 +5696,22 @@ struct RollLmMatInterceptFALSE : public Worker {
             arma_se.row(i) = sqrt(var_resid * trans(diagvec(A_inv_diag)));
             
           } else {
-            arma_se.row(i) = no_solution;
+            arma_se.row(i).fill(NA_REAL);
           }
           
         } else {
           
-          arma_coef.row(i) = no_solution;
+          arma_coef.row(i).fill(NA_REAL);
           arma_rsq[i] = NA_REAL;
-          arma_se.row(i) = no_solution;
+          arma_se.row(i).fill(NA_REAL);
           
         }
         
       } else {
         
-        arma_coef.row(i) = no_solution;
+        arma_coef.row(i).fill(NA_REAL);
         arma_rsq[i] = NA_REAL;
-        arma_se.row(i) = no_solution;
+        arma_se.row(i).fill(NA_REAL);
         
       }
       

@@ -1,8 +1,8 @@
 Package: roll
 Type: Package
 Title: Rolling and Expanding Statistics
-Version: 1.2.0
-Date: 2025-08-22
+Version: 1.2.1
+Date: 2026-03-28
 Authors@R: person("Jason", "Foster", , "jason.j.foster@gmail.com", c("aut", "cre"))
 Description: Fast and efficient computation of rolling and expanding statistics for time-series data.
 License: GPL (>= 2)
@@ -11,12 +11,12 @@ BugReports: https://github.com/jasonjfoster/roll/issues
 Imports: Rcpp, RcppParallel
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 SystemRequirements: GNU make
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Encoding: UTF-8
 Suggests: covr, testthat, zoo
 NeedsCompilation: yes
-Packaged: 2025-08-22 11:35:21 UTC; jason
+Packaged: 2026-03-28 15:27:00 UTC; jason
 Author: Jason Foster [aut, cre]
 Maintainer: Jason Foster <jason.j.foster@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-08-22 12:00:02 UTC
+Date/Publication: 2026-03-28 16:20:02 UTC

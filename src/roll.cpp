@@ -1,106 +1,5 @@
 #include "roll.h"
 
-void check_p(const double& p) {
-  
-  if ((p < 0) || (p > 1)) {
-    stop("value of 'p' must be between zero and one");
-  }
-  
-}
-
-void check_width(const int& width) {
-  
-  if (width < 1) {
-    stop("value of 'width' must be greater than zero");
-  }
-  
-}
-
-void check_weights_x(const int& n_rows_x, const int& width,
-                     const arma::vec& weights) {
-  
-  if ((int)weights.size() < std::min(width, n_rows_x)) {
-    stop("length of 'weights' must be greater than or equal to the number of rows in 'x' or 'width'");
-  }
-  
-}
-
-void check_weights_xy(const int& n_rows_xy, const int& width,
-                      const arma::vec& weights) {
-  
-  if ((int)weights.size() < std::min(width, n_rows_xy)) {
-    stop("length of 'weights' must be greater than or equal to the number of rows in 'x' (and 'y', if applicable) or 'width'");
-  }
-  
-}
-
-void check_weights_lm(const int& n_rows_xy, const int& width,
-                      const arma::vec& weights) {
-  
-  if ((int)weights.size() < std::min(width, n_rows_xy)) {
-    stop("length of 'weights' must greater than or equal to the number of rows in 'x' (and 'y') or 'width'");
-  }
-  
-}
-
-bool check_lambda(const arma::vec& weights, const int& n_rows_x,
-                  const int& width, const bool& online) {
-  
-  // check if equal-weights
-  bool status_eq = all(weights == weights[0]);
-  bool status_exp = true;
-  
-  // check if exponential-weights
-  if (!status_eq) {
-    
-    int n = weights.size();
-    long double lambda = 0;
-    long double lambda_prev = 0;
-    
-    // check if constant ratio
-    for (int i = 0; (i < n - 1) && status_exp; i++) {
-      
-      // ratio of weights
-      lambda_prev = lambda;
-      lambda = weights[n - i - 2] / weights[n - i - 1];
-      
-      // tolerance for consistency with R's all.equal
-      if (((i > 0) && (std::abs(lambda - lambda_prev) > sqrt(arma::datum::eps))) ||
-          ((weights[n - i - 2] > weights[n - i - 1]) && (width < n_rows_x)) ||
-          (std::isnan(lambda) || (std::isinf(lambda)))) {
-        
-        status_exp = false;
-        
-      }
-      
-    }
-    
-  }
-  
-  if (!status_exp && online) {
-    warning("'online' is only supported for equal or exponential decay 'weights'");
-  }
-  
-  return status_exp;
-  
-}
-
-void check_min_obs(const int& min_obs) {
-  
-  if (min_obs < 1) {
-    stop("value of 'min_obs' must be greater than zero");
-  }
-  
-}
-
-void check_lm(const int& n_rows_x, const int& n_rows_y) {
-  
-  if (n_rows_x != n_rows_y) {
-    stop("number of rows in 'x' must equal the number of rows in 'y'");
-  }
-  
-}
-
 List dimnames_lm_x(const List& input, const int& n_cols_x,
                    const bool& intercept) {
   
@@ -270,11 +169,11 @@ SEXP roll_any(const SEXP& x, const int& width,
     IntegerMatrix rcpp_any(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -303,14 +202,7 @@ SEXP roll_any(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     LogicalMatrix result(rcpp_any);
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -322,11 +214,11 @@ SEXP roll_any(const SEXP& x, const int& width,
     IntegerVector rcpp_any(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling any
     if (online) {
@@ -347,13 +239,7 @@ SEXP roll_any(const SEXP& x, const int& width,
     
     // create and return a vector object
     LogicalVector result(wrap(rcpp_any));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -375,11 +261,11 @@ SEXP roll_all(const SEXP& x, const int& width,
     IntegerMatrix rcpp_all(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -408,14 +294,7 @@ SEXP roll_all(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     LogicalMatrix result(rcpp_all);
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -427,11 +306,11 @@ SEXP roll_all(const SEXP& x, const int& width,
     IntegerVector rcpp_all(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling all
     if (online) {
@@ -452,13 +331,7 @@ SEXP roll_all(const SEXP& x, const int& width,
     
     // create and return a vector object
     LogicalVector result(wrap(rcpp_all));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -482,16 +355,16 @@ SEXP roll_sum(const SEXP& x, const int& width,
     arma::mat arma_sum(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -522,14 +395,7 @@ SEXP roll_sum(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     NumericMatrix result(wrap(arma_sum));
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -541,16 +407,16 @@ SEXP roll_sum(const SEXP& x, const int& width,
     arma::vec arma_sum(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling sums
     if (status && online) {
@@ -573,13 +439,7 @@ SEXP roll_sum(const SEXP& x, const int& width,
     
     // create and return a vector object
     NumericVector result(wrap(arma_sum));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -603,16 +463,16 @@ SEXP roll_prod(const SEXP& x, const int& width,
     arma::mat arma_prod(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -643,14 +503,7 @@ SEXP roll_prod(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     NumericMatrix result(wrap(arma_prod));
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -662,16 +515,16 @@ SEXP roll_prod(const SEXP& x, const int& width,
     arma::vec arma_prod(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling products
     if (status && online) {
@@ -694,13 +547,7 @@ SEXP roll_prod(const SEXP& x, const int& width,
     
     // create and return a vector object
     NumericVector result(wrap(arma_prod));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -724,16 +571,16 @@ SEXP roll_mean(const SEXP& x, const int& width,
     arma::mat arma_mean(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -764,14 +611,7 @@ SEXP roll_mean(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     NumericMatrix result(wrap(arma_mean));
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -783,16 +623,16 @@ SEXP roll_mean(const SEXP& x, const int& width,
     arma::vec arma_mean(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling means
     if (status && online) {
@@ -815,13 +655,7 @@ SEXP roll_mean(const SEXP& x, const int& width,
     
     // create and return a vector object
     NumericVector result(wrap(arma_mean));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -845,18 +679,18 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     arma::imat arma_idxquantile(n_rows_x, n_cols_x); // unsigned int coerce NA to int
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
     
     // check 'p' argument for errors
-    check_p(p);
+    roll::check_bounds_double(p, 0, 1, "p");
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -911,14 +745,7 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     IntegerMatrix result(wrap(arma_idxquantile));
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -930,18 +757,18 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     arma::ivec arma_idxquantile(n_rows_x); // unsigned int coerce NA to int
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
     
     // check 'p' argument for errors
-    check_p(p);
+    roll::check_bounds_double(p, 0, 1, "p");
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling index of quantiles
     if (online) {
@@ -988,13 +815,7 @@ SEXP roll_idxquantile(const SEXP& x, const int& width,
     
     // create and return a vector object
     IntegerVector result(wrap(arma_idxquantile));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -1018,18 +839,18 @@ SEXP roll_quantile(const SEXP& x, const int& width,
     arma::mat arma_quantile(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
     
     // check 'p' argument for errors
-    check_p(p);
+    roll::check_bounds_double(p, 0, 1, "p");
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -1104,14 +925,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     NumericMatrix result(wrap(arma_quantile));
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -1123,18 +937,18 @@ SEXP roll_quantile(const SEXP& x, const int& width,
     arma::vec arma_quantile(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
     
     // check 'p' argument for errors
-    check_p(p);
+    roll::check_bounds_double(p, 0, 1, "p");
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling quantiles
     if (online) {
@@ -1200,13 +1014,7 @@ SEXP roll_quantile(const SEXP& x, const int& width,
     }
       
     NumericVector result(wrap(arma_quantile));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -1230,16 +1038,16 @@ SEXP roll_var(const SEXP& x, const int& width,
     arma::mat arma_var(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -1270,14 +1078,7 @@ SEXP roll_var(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     NumericMatrix result(wrap(arma_var));
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -1289,16 +1090,16 @@ SEXP roll_var(const SEXP& x, const int& width,
     arma::vec arma_var(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling variances
     if (status && online) {
@@ -1321,13 +1122,7 @@ SEXP roll_var(const SEXP& x, const int& width,
     
     // create and return a vector object
     NumericVector result(wrap(arma_var));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -1351,16 +1146,16 @@ SEXP roll_sd(const SEXP& x, const int& width,
     arma::mat arma_sd(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -1391,14 +1186,7 @@ SEXP roll_sd(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     NumericMatrix result(wrap(arma_sd));
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -1410,16 +1198,16 @@ SEXP roll_sd(const SEXP& x, const int& width,
     arma::vec arma_sd(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling standard deviations
     if (status && online) {
@@ -1442,13 +1230,7 @@ SEXP roll_sd(const SEXP& x, const int& width,
     
     // create and return a vector object
     NumericVector result(wrap(arma_sd));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -1473,16 +1255,16 @@ SEXP roll_scale(const SEXP& x, const int& width,
     arma::mat arma_scale(n_rows_x, n_cols_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'false',
     // otherwise check argument for errors
@@ -1513,14 +1295,7 @@ SEXP roll_scale(const SEXP& x, const int& width,
     
     // create and return a matrix or xts object
     NumericMatrix result(wrap(arma_scale));
-    List dimnames = xx.attr("dimnames");
-    result.attr("dimnames") = dimnames;
-    result.attr("index") = xx.attr("index");
-    result.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    result.attr(".indexTZ") = xx.attr(".indexTZ");
-    result.attr("tclass") = xx.attr("tclass");
-    result.attr("tzone") = xx.attr("tzone");
-    result.attr("class") = xx.attr("class");
+    roll::xts_attr(result, xx);
     
     return result;
     
@@ -1532,16 +1307,16 @@ SEXP roll_scale(const SEXP& x, const int& width,
     arma::vec arma_scale(n_rows_x);
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_x(n_rows_x, width, weights);
-    bool status = check_lambda(weights, n_rows_x, width, online);
+    roll::check_weights(n_rows_x, width, weights, "'x'");
+    bool status = roll::check_lambda(weights, n_rows_x, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling centering and scaling
     if (status && online) {
@@ -1564,13 +1339,7 @@ SEXP roll_scale(const SEXP& x, const int& width,
     
     // create and return a vector object
     NumericVector result(wrap(arma_scale));
-    result.attr("dim") = R_NilValue;
-    List names = xx.attr("names");
-    if (names.size() > 0) {
-      result.attr("names") = names;
-    }
-    result.attr("index") = xx.attr("index");
-    result.attr("class") = xx.attr("class");
+    roll::vec_attr(result, xx);
     
     return result;
     
@@ -1597,19 +1366,19 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     arma::cube arma_cov(n_cols_x, n_cols_y, n_rows_xy);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, yy.nrow());
+    roll::check_rows_equal(n_rows_xy, yy.nrow(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y', if applicable)");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'true',
     // otherwise check argument for errors
@@ -1670,16 +1439,9 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     
     // create and return a matrix
     NumericVector result(wrap(arma_cov));
-    result.attr("dim") = IntegerVector::create(n_cols_x, n_cols_y, n_rows_xy);
     List dimnames_x = xx.attr("dimnames");
     List dimnames_y = yy.attr("dimnames");
-    if ((dimnames_x.size() > 1) && (dimnames_y.size() > 1)) {
-      result.attr("dimnames") = List::create(dimnames_x[1], dimnames_y[1]);
-    } else if (dimnames_x.size() > 1) {
-      result.attr("dimnames") = List::create(dimnames_x[1], R_NilValue);
-    } else if (dimnames_y.size() > 1) {
-      result.attr("dimnames") = List::create(R_NilValue, dimnames_y[1]);
-    }
+    roll::cube_attr(result, n_cols_x, n_cols_y, n_rows_xy, dimnames_x, dimnames_y);
     
     return result;
     
@@ -1699,19 +1461,19 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     arma::cube arma_cov(n_cols_x, n_cols_y, n_rows_xy);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, yyy.nrow());
+    roll::check_rows_equal(n_rows_xy, yyy.nrow(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y', if applicable)");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'true',
     // otherwise check argument for errors
@@ -1742,16 +1504,9 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     
     // create and return a matrix
     NumericVector result(wrap(arma_cov));
-    result.attr("dim") = IntegerVector::create(n_cols_x, n_cols_y, n_rows_xy);
     List dimnames_x = xx.attr("dimnames");
     List dimnames_y = yyy.attr("dimnames");
-    if ((dimnames_x.size() > 1) && (dimnames_y.size() > 1)) {
-      result.attr("dimnames") = List::create(dimnames_x[1], dimnames_y[1]);
-    } else if (dimnames_x.size() > 1) {
-      result.attr("dimnames") = List::create(dimnames_x[1], R_NilValue);
-    } else if (dimnames_y.size() > 1) {
-      result.attr("dimnames") = List::create(R_NilValue, dimnames_y[1]);
-    }
+    roll::cube_attr(result, n_cols_x, n_cols_y, n_rows_xy, dimnames_x, dimnames_y);
     
     return result;
     
@@ -1771,19 +1526,19 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     arma::cube arma_cov(n_cols_x, n_cols_y, n_rows_xy);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, yy.nrow());
+    roll::check_rows_equal(n_rows_xy, yy.nrow(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y', if applicable)");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'true',
     // otherwise check argument for errors
@@ -1816,16 +1571,9 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     
     // create and return a matrix
     NumericVector result(wrap(arma_cov));
-    result.attr("dim") = IntegerVector::create(n_cols_x, n_cols_y, n_rows_xy);
     List dimnames_x = xxx.attr("dimnames");
     List dimnames_y = yy.attr("dimnames");
-    if ((dimnames_x.size() > 1) && (dimnames_y.size() > 1)) {
-      result.attr("dimnames") = List::create(dimnames_x[1], dimnames_y[1]);
-    } else if (dimnames_x.size() > 1) {
-      result.attr("dimnames") = List::create(dimnames_x[1], R_NilValue);
-    } else if (dimnames_y.size() > 1) {
-      result.attr("dimnames") = List::create(R_NilValue, dimnames_y[1]);
-    }
+    roll::cube_attr(result, n_cols_x, n_cols_y, n_rows_xy, dimnames_x, dimnames_y);
     
     return result;
     
@@ -1838,19 +1586,19 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     arma::vec arma_cov(n_rows_xy);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, yy.size());
+    roll::check_rows_equal(n_rows_xy, yy.size(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y', if applicable)");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling covariances
     if (status && online) {
@@ -1901,7 +1649,7 @@ SEXP roll_cov_z(const SEXP& x, const SEXP& y,
     
     // create and return a vector object
     NumericVector result(wrap(arma_cov));
-    result.attr("dim") = R_NilValue;
+    roll::strip_dim(result);
     
     return result;
     
@@ -1952,19 +1700,19 @@ SEXP roll_crossprod_z(const SEXP& x, const SEXP& y,
     arma::cube arma_crossprod(n_cols_x, n_cols_y, n_rows_xy);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, yy.nrow());
+    roll::check_rows_equal(n_rows_xy, yy.nrow(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y', if applicable)");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'true',
     // otherwise check argument for errors
@@ -2027,16 +1775,9 @@ SEXP roll_crossprod_z(const SEXP& x, const SEXP& y,
     
     // create and return a matrix
     NumericVector result(wrap(arma_crossprod));
-    result.attr("dim") = IntegerVector::create(n_cols_x, n_cols_y, n_rows_xy);
     List dimnames_x = xx.attr("dimnames");
     List dimnames_y = yy.attr("dimnames");
-    if ((dimnames_x.size() > 1) && (dimnames_y.size() > 1)) {
-      result.attr("dimnames") = List::create(dimnames_x[1], dimnames_y[1]);
-    } else if (dimnames_x.size() > 1) {
-      result.attr("dimnames") = List::create(dimnames_x[1], R_NilValue);
-    } else if (dimnames_y.size() > 1) {
-      result.attr("dimnames") = List::create(R_NilValue, dimnames_y[1]);
-    }
+    roll::cube_attr(result, n_cols_x, n_cols_y, n_rows_xy, dimnames_x, dimnames_y);
     
     return result;
     
@@ -2056,19 +1797,19 @@ SEXP roll_crossprod_z(const SEXP& x, const SEXP& y,
     arma::cube arma_crossprod(n_cols_x, n_cols_y, n_rows_xy);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, yyy.nrow());
+    roll::check_rows_equal(n_rows_xy, yyy.nrow(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y', if applicable)");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'true',
     // otherwise check argument for errors
@@ -2099,16 +1840,9 @@ SEXP roll_crossprod_z(const SEXP& x, const SEXP& y,
     
     // create and return a matrix
     NumericVector result(wrap(arma_crossprod));
-    result.attr("dim") = IntegerVector::create(n_cols_x, n_cols_y, n_rows_xy);
     List dimnames_x = xx.attr("dimnames");
     List dimnames_y = yyy.attr("dimnames");
-    if ((dimnames_x.size() > 1) && (dimnames_y.size() > 1)) {
-      result.attr("dimnames") = List::create(dimnames_x[1], dimnames_y[1]);
-    } else if (dimnames_x.size() > 1) {
-      result.attr("dimnames") = List::create(dimnames_x[1], R_NilValue);
-    } else if (dimnames_y.size() > 1) {
-      result.attr("dimnames") = List::create(R_NilValue, dimnames_y[1]);
-    }
+    roll::cube_attr(result, n_cols_x, n_cols_y, n_rows_xy, dimnames_x, dimnames_y);
     
     return result;
     
@@ -2128,19 +1862,19 @@ SEXP roll_crossprod_z(const SEXP& x, const SEXP& y,
     arma::cube arma_crossprod(n_cols_x, n_cols_y, n_rows_xy);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, yy.nrow());
+    roll::check_rows_equal(n_rows_xy, yy.nrow(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y', if applicable)");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // default 'complete_obs' argument is 'true',
     // otherwise check argument for errors
@@ -2173,16 +1907,9 @@ SEXP roll_crossprod_z(const SEXP& x, const SEXP& y,
     
     // create and return a matrix
     NumericVector result(wrap(arma_crossprod));
-    result.attr("dim") = IntegerVector::create(n_cols_x, n_cols_y, n_rows_xy);
     List dimnames_x = xxx.attr("dimnames");
     List dimnames_y = yy.attr("dimnames");
-    if ((dimnames_x.size() > 1) && (dimnames_y.size() > 1)) {
-      result.attr("dimnames") = List::create(dimnames_x[1], dimnames_y[1]);
-    } else if (dimnames_x.size() > 1) {
-      result.attr("dimnames") = List::create(dimnames_x[1], R_NilValue);
-    } else if (dimnames_y.size() > 1) {
-      result.attr("dimnames") = List::create(R_NilValue, dimnames_y[1]);
-    }
+    roll::cube_attr(result, n_cols_x, n_cols_y, n_rows_xy, dimnames_x, dimnames_y);
     
     return result;
     
@@ -2195,19 +1922,19 @@ SEXP roll_crossprod_z(const SEXP& x, const SEXP& y,
     arma::vec arma_crossprod(n_rows_xy);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, yy.size());
+    roll::check_rows_equal(n_rows_xy, yy.size(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_xy(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y', if applicable)");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // compute rolling crossproducts
     if (status && online) {
@@ -2258,7 +1985,7 @@ SEXP roll_crossprod_z(const SEXP& x, const SEXP& y,
     
     // create and return a vector object
     NumericVector result(wrap(arma_crossprod));
-    result.attr("dim") = R_NilValue;
+    roll::strip_dim(result);
     
     return result;
     
@@ -2308,19 +2035,19 @@ List roll_lm_z(const SEXP& x, const NumericVector& y,
     List result(3);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, y.size());
+    roll::check_rows_equal(n_rows_xy, y.size(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_lm(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y')");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // cbind x and y variables
     NumericMatrix data(n_rows_xy, n_cols_x);
@@ -2406,19 +2133,19 @@ List roll_lm_z(const SEXP& x, const NumericVector& y,
     List result(3);
     
     // check 'x' and 'y' arguments for errors
-    check_lm(n_rows_xy, y.size());
+    roll::check_rows_equal(n_rows_xy, y.size(), "x", "y");
     
     // check 'width' argument for errors
-    check_width(width);
+    roll::check_pos_int(width, "width");
     
     // default 'weights' argument is equal-weighted,
     // otherwise check argument for errors
-    check_weights_lm(n_rows_xy, width, weights);
-    bool status = check_lambda(weights, n_rows_xy, width, online);
+    roll::check_weights(n_rows_xy, width, weights, "'x' (and 'y')");
+    bool status = roll::check_lambda(weights, n_rows_xy, width, online);
     
     // default 'min_obs' argument is 'width',
     // otherwise check argument for errors
-    check_min_obs(min_obs);
+    roll::check_pos_int(min_obs, "min_obs");
     
     // cbind x and y variables
     NumericMatrix data(n_rows_xy, n_cols_x);
@@ -2534,39 +2261,16 @@ List roll_lm(const SEXP& x, const SEXP& y,
       NumericVector coef(wrap(arma_coef_z));
       coef.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
       List dimnames_x = xx.attr("dimnames");
-      coef.attr("dimnames") = dimnames_lm_x(dimnames_x, n_cols_x, intercept);
-      coef.attr("index") = xx.attr("index");
-      coef.attr(".indexCLASS") = xx.attr(".indexCLASS");
-      coef.attr(".indexTZ") = xx.attr(".indexTZ");
-      coef.attr("tclass") = xx.attr("tclass");
-      coef.attr("tzone") = xx.attr("tzone");
-      coef.attr("class") = xx.attr("class");
+      roll::xts_attr(coef, xx, dimnames_lm_x(dimnames_x, n_cols_x, intercept));
       
       // create and return a matrix or xts object for r-squareds
       NumericVector rsq(wrap(arma_rsq_z));
-      rsq.attr("dim") = IntegerVector::create(n_rows_xy, 1);
-      if (dimnames_x.size() > 1) {
-        rsq.attr("dimnames") = List::create(dimnames_x[0], "R-squared");
-      } else {
-        rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
-      }
-      rsq.attr("index") = xx.attr("index");
-      rsq.attr(".indexCLASS") = xx.attr(".indexCLASS");
-      rsq.attr(".indexTZ") = xx.attr(".indexTZ");
-      rsq.attr("tclass") = xx.attr("tclass");
-      rsq.attr("tzone") = xx.attr("tzone");
-      rsq.attr("class") = xx.attr("class");
+      roll::rsq_attr(rsq, n_rows_xy, xx, dimnames_x);
       
       // create and return a matrix or xts object for standard errors
       NumericVector se(wrap(arma_se_z));
       se.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
-      se.attr("dimnames") = coef.attr("dimnames");
-      se.attr("index") = xx.attr("index");
-      se.attr(".indexCLASS") = xx.attr(".indexCLASS");
-      se.attr(".indexTZ") = xx.attr(".indexTZ");
-      se.attr("tclass") = xx.attr("tclass");
-      se.attr("tzone") = xx.attr("tzone");
-      se.attr("class") = xx.attr("class");
+      roll::xts_attr(se, xx, coef.attr("dimnames"));
       
       // create and return a list
       result = List::create(Named("coefficients") = coef,
@@ -2590,39 +2294,16 @@ List roll_lm(const SEXP& x, const SEXP& y,
         NumericVector coef(wrap(arma_coef_z));
         coef.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
         List dimnames_x = xx.attr("dimnames");
-        coef.attr("dimnames") = dimnames_lm_x(dimnames_x, n_cols_x, intercept);
-        coef.attr("index") = xx.attr("index");
-        coef.attr(".indexCLASS") = xx.attr(".indexCLASS");
-        coef.attr(".indexTZ") = xx.attr(".indexTZ");
-        coef.attr("tclass") = xx.attr("tclass");
-        coef.attr("tzone") = xx.attr("tzone");
-        coef.attr("class") = xx.attr("class");
+        roll::xts_attr(coef, xx, dimnames_lm_x(dimnames_x, n_cols_x, intercept));
         
         // create and return a matrix or xts object for r-squareds
         NumericVector rsq(wrap(arma_rsq_z));
-        rsq.attr("dim") = IntegerVector::create(n_rows_xy, 1);
-        if (dimnames_x.size() > 1) {
-          rsq.attr("dimnames") = List::create(dimnames_x[0], "R-squared");
-        } else {
-          rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
-        }
-        rsq.attr("index") = xx.attr("index");
-        rsq.attr(".indexCLASS") = xx.attr(".indexCLASS");
-        rsq.attr(".indexTZ") = xx.attr(".indexTZ");
-        rsq.attr("tclass") = xx.attr("tclass");
-        rsq.attr("tzone") = xx.attr("tzone");
-        rsq.attr("class") = xx.attr("class");
+        roll::rsq_attr(rsq, n_rows_xy, xx, dimnames_x);
         
         // create and return a matrix or xts object for standard errors
         NumericVector se(wrap(arma_se_z));
         se.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
-        se.attr("dimnames") = coef.attr("dimnames");
-        se.attr("index") = xx.attr("index");
-        se.attr(".indexCLASS") = xx.attr(".indexCLASS");
-        se.attr(".indexTZ") = xx.attr(".indexTZ");
-        se.attr("tclass") = xx.attr("tclass");
-        se.attr("tzone") = xx.attr("tzone");
-        se.attr("class") = xx.attr("class");
+        roll::xts_attr(se, xx, coef.attr("dimnames"));
         
         result_coef(z) = coef;
         result_rsq(z) = rsq;
@@ -2676,39 +2357,16 @@ List roll_lm(const SEXP& x, const SEXP& y,
     NumericVector coef(wrap(arma_coef_z));
     coef.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
     List dimnames_x = xx.attr("dimnames");
-    coef.attr("dimnames") = dimnames_lm_x(dimnames_x, n_cols_x, intercept);
-    coef.attr("index") = xx.attr("index");
-    coef.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    coef.attr(".indexTZ") = xx.attr(".indexTZ");
-    coef.attr("tclass") = xx.attr("tclass");
-    coef.attr("tzone") = xx.attr("tzone");
-    coef.attr("class") = xx.attr("class");
+    roll::xts_attr(coef, xx, dimnames_lm_x(dimnames_x, n_cols_x, intercept));
     
     // create and return a matrix or xts object for r-squareds
     NumericVector rsq(wrap(arma_rsq_z));
-    rsq.attr("dim") = IntegerVector::create(n_rows_xy, 1);
-    if (dimnames_x.size() > 1) {
-      rsq.attr("dimnames") = List::create(dimnames_x[0], "R-squared");
-    } else {
-      rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
-    }
-    rsq.attr("index") = xx.attr("index");
-    rsq.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    rsq.attr(".indexTZ") = xx.attr(".indexTZ");
-    rsq.attr("tclass") = xx.attr("tclass");
-    rsq.attr("tzone") = xx.attr("tzone");
-    rsq.attr("class") = xx.attr("class");
+    roll::rsq_attr(rsq, n_rows_xy, xx, dimnames_x);
     
     // create and return a matrix or xts object for standard errors
     NumericVector se(wrap(arma_se_z));
     se.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
-    se.attr("dimnames") = coef.attr("dimnames");
-    se.attr("index") = xx.attr("index");
-    se.attr(".indexCLASS") = xx.attr(".indexCLASS");
-    se.attr(".indexTZ") = xx.attr(".indexTZ");
-    se.attr("tclass") = xx.attr("tclass");
-    se.attr("tzone") = xx.attr("tzone");
-    se.attr("class") = xx.attr("class");
+    roll::xts_attr(se, xx, coef.attr("dimnames"));
     
     // create and return a list
     result = List::create(Named("coefficients") = coef,
@@ -2755,39 +2413,16 @@ List roll_lm(const SEXP& x, const SEXP& y,
       NumericVector coef(wrap(arma_coef_z));
       coef.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
       List dimnames_x = xx.attr("dimnames");
-      coef.attr("dimnames") = dimnames_lm_x(dimnames_x, n_cols_x, intercept);
-      coef.attr("index") = yy.attr("index");
-      coef.attr(".indexCLASS") = yy.attr(".indexCLASS");
-      coef.attr(".indexTZ") = yy.attr(".indexTZ");
-      coef.attr("tclass") = yy.attr("tclass");
-      coef.attr("tzone") = yy.attr("tzone");
-      coef.attr("class") = yy.attr("class");
+      roll::xts_attr(coef, yy, dimnames_lm_x(dimnames_x, n_cols_x, intercept));
       
       // create and return a matrix or xts object for r-squareds
       NumericVector rsq(wrap(arma_rsq_z));
-      rsq.attr("dim") = IntegerVector::create(n_rows_xy, 1);
-      if (dimnames_x.size() > 1) {
-        rsq.attr("dimnames") = List::create(dimnames_x[0], "R-squared");
-      } else {
-        rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
-      }
-      rsq.attr("index") = yy.attr("index");
-      rsq.attr(".indexCLASS") = yy.attr(".indexCLASS");
-      rsq.attr(".indexTZ") = yy.attr(".indexTZ");
-      rsq.attr("tclass") = yy.attr("tclass");
-      rsq.attr("tzone") = yy.attr("tzone");
-      rsq.attr("class") = yy.attr("class");
+      roll::rsq_attr(rsq, n_rows_xy, yy, dimnames_x);
       
       // create and return a matrix or xts object for standard errors
       NumericVector se(wrap(arma_se_z));
       se.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
-      se.attr("dimnames") = coef.attr("dimnames");
-      se.attr("index") = yy.attr("index");
-      se.attr(".indexCLASS") = yy.attr(".indexCLASS");
-      se.attr(".indexTZ") = yy.attr(".indexTZ");
-      se.attr("tclass") = yy.attr("tclass");
-      se.attr("tzone") = yy.attr("tzone");
-      se.attr("class") = yy.attr("class");
+      roll::xts_attr(se, yy, coef.attr("dimnames"));
       
       // create and return a list
       result = List::create(Named("coefficients") = coef,
@@ -2811,39 +2446,16 @@ List roll_lm(const SEXP& x, const SEXP& y,
         NumericVector coef(wrap(arma_coef_z));
         coef.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
         List dimnames_x = xxx.attr("dimnames");
-        coef.attr("dimnames") = dimnames_lm_x(dimnames_x, n_cols_x, intercept);
-        coef.attr("index") = yy.attr("index");
-        coef.attr(".indexCLASS") = yy.attr(".indexCLASS");
-        coef.attr(".indexTZ") = yy.attr(".indexTZ");
-        coef.attr("tclass") = yy.attr("tclass");
-        coef.attr("tzone") = yy.attr("tzone");
-        coef.attr("class") = yy.attr("class");
+        roll::xts_attr(coef, yy, dimnames_lm_x(dimnames_x, n_cols_x, intercept));
         
         // create and return a matrix or xts object for r-squareds
         NumericVector rsq(wrap(arma_rsq_z));
-        rsq.attr("dim") = IntegerVector::create(n_rows_xy, 1);
-        if (dimnames_x.size() > 1) {
-          rsq.attr("dimnames") = List::create(dimnames_x[0], "R-squared");
-        } else {
-          rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
-        }
-        rsq.attr("index") = yy.attr("index");
-        rsq.attr(".indexCLASS") = yy.attr(".indexCLASS");
-        rsq.attr(".indexTZ") = yy.attr(".indexTZ");
-        rsq.attr("tclass") = yy.attr("tclass");
-        rsq.attr("tzone") = yy.attr("tzone");
-        rsq.attr("class") = yy.attr("class");
+        roll::rsq_attr(rsq, n_rows_xy, yy, dimnames_x);
         
         // create and return a matrix or xts object for standard errors
         NumericVector se(wrap(arma_se_z));
         se.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
-        se.attr("dimnames") = coef.attr("dimnames");
-        se.attr("index") = yy.attr("index");
-        se.attr(".indexCLASS") = yy.attr(".indexCLASS");
-        se.attr(".indexTZ") = yy.attr(".indexTZ");
-        se.attr("tclass") = yy.attr("tclass");
-        se.attr("tzone") = yy.attr("tzone");
-        se.attr("class") = yy.attr("class");
+        roll::xts_attr(se, yy, coef.attr("dimnames"));
         
         result_coef(z) = coef;
         result_rsq(z) = rsq;
@@ -2900,39 +2512,16 @@ List roll_lm(const SEXP& x, const SEXP& y,
       NumericVector coef(wrap(arma_coef_z));
       coef.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
       List dimnames_x = xx.attr("dimnames");
-      coef.attr("dimnames") = dimnames_lm_x(dimnames_x, n_cols_x, intercept);
-      coef.attr("index") = xx.attr("index");
-      coef.attr(".indexCLASS") = xx.attr(".indexCLASS");
-      coef.attr(".indexTZ") = xx.attr(".indexTZ");
-      coef.attr("tclass") = xx.attr("tclass");
-      coef.attr("tzone") = xx.attr("tzone");
-      coef.attr("class") = xx.attr("class");
+      roll::xts_attr(coef, xx, dimnames_lm_x(dimnames_x, n_cols_x, intercept));
       
       // create and return a matrix or xts object for r-squareds
       NumericVector rsq(wrap(arma_rsq_z));
-      rsq.attr("dim") = IntegerVector::create(n_rows_xy, 1);
-      if (dimnames_x.size() > 1) {
-        rsq.attr("dimnames") = List::create(dimnames_x[0], "R-squared");
-      } else {
-        rsq.attr("dimnames") = List::create(R_NilValue, "R-squared");
-      }
-      rsq.attr("index") = xx.attr("index");
-      rsq.attr(".indexCLASS") = xx.attr(".indexCLASS");
-      rsq.attr(".indexTZ") = xx.attr(".indexTZ");
-      rsq.attr("tclass") = xx.attr("tclass");
-      rsq.attr("tzone") = xx.attr("tzone");
-      rsq.attr("class") = xx.attr("class");
+      roll::rsq_attr(rsq, n_rows_xy, xx, dimnames_x);
       
       // create and return a matrix or xts object for standard errors
       NumericVector se(wrap(arma_se_z));
       se.attr("dim") = IntegerVector::create(n_rows_xy, n_cols_x);
-      se.attr("dimnames") = coef.attr("dimnames");
-      se.attr("index") = xx.attr("index");
-      se.attr(".indexCLASS") = xx.attr(".indexCLASS");
-      se.attr(".indexTZ") = xx.attr(".indexTZ");
-      se.attr("tclass") = xx.attr("tclass");
-      se.attr("tzone") = xx.attr("tzone");
-      se.attr("class") = xx.attr("class");
+      roll::xts_attr(se, xx, coef.attr("dimnames"));
       
       // create and return a list
       result = List::create(Named("coefficients") = coef,
@@ -2945,31 +2534,15 @@ List roll_lm(const SEXP& x, const SEXP& y,
       
       // create and return a vector object for coefficients
       NumericVector coef(wrap(arma_coef_z));
-      coef.attr("dim") = R_NilValue;
-      List names = xx.attr("names");
-      if (names.size() > 0) {
-        coef.attr("names") = names;
-      }
-      coef.attr("index") = xx.attr("index");
-      coef.attr("class") = xx.attr("class");
+      roll::vec_attr(coef, xx);
       
       // create and return a vector object for r-squareds
       NumericVector rsq(wrap(arma_rsq_z));
-      rsq.attr("dim") = R_NilValue;
-      if (names.size() > 0) {
-        rsq.attr("names") = names;
-      }
-      rsq.attr("index") = xx.attr("index");
-      rsq.attr("class") = xx.attr("class");
+      roll::vec_attr(rsq, xx);
       
       // create and return a vector object for standard errors
       NumericVector se(wrap(arma_se_z));
-      se.attr("dim") = R_NilValue;
-      if (names.size() > 0) {
-        se.attr("names") = names;
-      }
-      se.attr("index") = xx.attr("index");
-      se.attr("class") = xx.attr("class");
+      roll::vec_attr(se, xx);
       
       // create and return a list
       result = List::create(Named("coefficients") = coef,
